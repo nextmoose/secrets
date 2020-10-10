@@ -84,7 +84,8 @@ fi &&
     ${ pkgs.coreutils }/bin/rm ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }.lock &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
-cfg = import config pkgs structure ;
+temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
+cfg = import config pkgs structure temporary-directory ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
