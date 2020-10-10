@@ -1,5 +1,5 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
-structure = constructor-script : pkgs.writeShellScriptBin "structure" ''
+structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
     ${ pkgs.coreutils }/bin/mkdir ${ structures-dir } &&
@@ -83,7 +83,7 @@ fi &&
     ) 200>${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }.lock &&
     ${ pkgs.coreutils }/bin/rm ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }.lock &&
     ${ pkgs.coreutils }/bin/true
-'' ;
+'' }/bin/structure )" ;
 cfg = import config pkgs structure ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {

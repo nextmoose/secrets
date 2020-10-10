@@ -5,6 +5,9 @@ ${ pkgs.coreutils }/bin/echo FOO > file.txt &&
 '' ;
 in {
     derivations = {
-        foo = structure foo ;
+        foo = ''
+${ pkgs.coreutils }/bin/echo ${ structure foo } &&
+    ${ pkgs.coreutils }/bin/true
+	'' ;
     } ;
 }
