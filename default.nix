@@ -1,4 +1,5 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
+private = path : private-dir + ( "/" + path ) ;
 structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
@@ -85,7 +86,14 @@ fi &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
-cfg = import config pkgs structure temporary-directory ;
+dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
+${ pkgs.gnupg }/bin/gpg --batch --import ${ gpg-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ gpg-ownertrust } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import ${ gpg2-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ gpg2-ownertrust } &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs structure private temporary-directory dot-gnupg ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
