@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , scripts-file } : pkgs.mkShell {
+{ pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let cfg = import config pkgs ; in pkgs.mkShell {
     shellHook = ''
         if [ ! -d ${ structures-dir } ]
 	then
@@ -14,7 +14,7 @@
 	    cd $HOME &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
-	    true
+	    ${ pkgs.coreutils }/bin/true
     '' ;
-    buildInputs = let set = import scripts-file pkgs ; in builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name set ) ) ( builtins.attrNames set ) ;
+    buildInputs = builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ;
 }
