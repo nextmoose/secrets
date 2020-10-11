@@ -102,13 +102,6 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     ${ pkgs.coreutils }/bin/chmod ${ permissions } secret.asc &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-pass-kludge = dot-gnupg : password-store-dir : ''
-export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode ask --batch --passphrase-fd 0" &&
-    export PASSWORD_STORE_DIR=${ password-store-dir } &&
-    export PATH=/usr/bin:$PATH &&
-    exec ${ pkgs.pass }/bin/pass $@ &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
 pass = dot-gnupg : password-store-dir : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -116,7 +109,7 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs structure private temporary-directory dot-gnupg secret-file pass pass-kludge ;
+cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; pass = pass ; } ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
