@@ -87,13 +87,27 @@ fi &&
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
 dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
-${ pkgs.gnupg }/bin/gpg --batch --import ${ gpg-private-keys } &&
-    ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ gpg-ownertrust } &&
-    ${ pkgs.gnupg }/bin/gpg2 --import ${ gpg2-private-keys } &&
-    ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ gpg2-ownertrust } &&
+${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } &&
+    ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs structure private temporary-directory dot-gnupg ;
+secret-file = dot-gnupg : password-store-dir : pass-name : permissions : structure ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    ${ pkgs.pass }/bin/pass show ${ pass-name } > secret.asc &&
+    ${ pkgs.coreutils }/bin/chmod ${ permissions } secret.asc &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+pass = dot-gnupg : password-store-dir : ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
+   export PASSWORD_STORE_DIR=${ password-store-dir } &&
+   exec ${ pkgs.pass }/bin/pass $@ &&
+   ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs structure private temporary-directory dot-gnupg secret-file pass ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
@@ -113,5 +127,5 @@ in pkgs.mkShell {
 	    export PRIVATE_DIR=${ private-dir } &&
 	    ${ pkgs.coreutils }/bin/true
     '' ;
-    buildInputs = builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ;
+    buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
 }
