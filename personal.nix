@@ -5,8 +5,9 @@ in {
     derivations = {
         gpg = "exec ${ pkgs.gnupg }/bin/gpg --homedir ${ dot-gnupg ( private "gpg-private-keys.asc" ) ( private "gpg-ownertrust.asc" ) ( private "gpg2-private-keys.asc" ) ( private "gpg2-ownertrust.asc" ) }" ;
 	browser-secrets = ''
-export PATH=$PATH:${ pkgs.pinentry }:${ pkgs.gpgme } &&
+export PATH=${ pkgs.pinentry-gnome }:${ pkgs.gpgme } &&
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg ( private "gpg-private-keys.asc" ) ( private "gpg-ownertrust.asc" ) ( private "gpg2-private-keys.asc" ) ( private "gpg2-ownertrust.asc" ) }" &&
+    export GNUPGHOME=${ dot-gnupg ( private "gpg-private-keys.asc" ) ( private "gpg-ownertrust.asc" ) ( private "gpg2-private-keys.asc" ) ( private "gpg2-ownertrust.asc" ) } &&
     export PASSWORD_STORE_DIR=${ builtins.fetchGit { url = "https://github.com/nextmoose/browser-secrets.git" ; } } &&
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
