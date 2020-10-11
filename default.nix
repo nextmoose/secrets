@@ -102,13 +102,21 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     ${ pkgs.coreutils }/bin/chmod ${ permissions } secret.asc &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-pass = dot-gnupg : password-store-dir : ''
-export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
-   export PASSWORD_STORE_DIR=${ password-store-dir } &&
-   exec ${ pkgs.pass }/bin/pass $@ &&
-   ${ pkgs.coreutils }/bin/true
+pass-kludge = dot-gnupg : password-store-dir : ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode ask --batch --passphrase-fd 0" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    export PATH=/usr/bin:$PATH &&
+    exec ${ pkgs.pass }/bin/pass $@ &&
+    ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs structure private temporary-directory dot-gnupg secret-file pass ;
+pass = dot-gnupg : password-store-dir : ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    export PATH=$PATH &&
+    exec ${ pkgs.pass }/bin/pass $@ &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs structure private temporary-directory dot-gnupg secret-file pass pass-kludge ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
@@ -126,6 +134,8 @@ in pkgs.mkShell {
 	    cd $HOME &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
+	    read -s -p "GNUPG PASSPHRASE" GNUPG_PASSPHRASE &&
+	    echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
 	    ${ pkgs.coreutils }/bin/true
     '' ;
     buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
