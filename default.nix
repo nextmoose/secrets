@@ -8,47 +8,52 @@ then
 fi &&
     (
         ( ${ pkgs.flock }/bin/flock 200 || exit 64 ) &&
-            if [ -f ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ]
+            if [ -d ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ]
             then
 	        STRUCTURE_DIR=$( ${ pkgs.coreutils }/bin/readlink --canonicalize ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ) &&
-	            if [ $( ${ pkgs.coreutils }/bin/readlink --canonicalize $STRUCTURE_DIR/constructor ) != "${ pkgs.writeShellScriptBin "constructor" constructor-script }" ]
+	            if [ $( ${ pkgs.coreutils }/bin/readlink --canonicalize $STRUCTURE_DIR/constructor ) != "${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor" ]
 	            then
-		        ${ pkgs.coreutils }/bin/echo Constructor Script Mismatch:  $STRUCTURE_DIR/constructor does not match ${ pkgs.writeShellScriptBin "constructor" constructor-script } &&
+		        ${ pkgs.coreutils }/bin/echo Constructor Script Mismatch:  $STRUCTURE_DIR/constructor does not match ${ pkgs.writeShellScriptBin "constructor" constructor-script } > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 		 	    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/before.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction before time was not recorded. &&
+		        ${ pkgs.coreutils }/bin/echo The construction before time was not recorded. > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/after.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction after time was not recorded. &&
+		        ${ pkgs.coreutils }/bin/echo The construction after time was not recorded. > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/exit-code.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction exit code was not recorded. &&
+		        ${ pkgs.coreutils }/bin/echo The construction exit code was not recorded. > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) != 0 ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction errored with exit code $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) &&
+		        ${ pkgs.coreutils }/bin/echo The construction errored with exit code $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/out.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction did not record standard out. &&
+		        ${ pkgs.coreutils }/bin/echo The construction did not record standard out. > $STRUCTURE_DIR/failure.asc &&
+		            exit 64 &&
+			    ${ pkgs.coreutils }/bin/true
+		    elif [ -f $STRUCTURE_DIR/failure.asc ]
+		    then
+		        ${ pkgs.coreutils }/bin/echo The construction recorded failure. >> $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/err.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction did not record standard error. &&
+		        ${ pkgs.coreutils }/bin/echo The construction did not record standard error. > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
-		    elif [ ! -z "${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/err.asc" ]
+		    elif [ ! -z "$( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/err.asc )" ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction recorded some standard error. &&
+		        ${ pkgs.coreutils }/bin/echo The construction recorded some standard error. > $STRUCTURE_DIR/failure.asc &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    else
@@ -69,7 +74,7 @@ fi &&
 	            ${ pkgs.coreutils }/bin/echo $EXIT_CODE > $STRUCTURE_DIR/exit-code.asc &&
 	            if [ $EXIT_CODE == 0 ]
 	            then
-	                ${ pkgs.coreutils }/bin/ln --symbolic $STRUCTURE_DIR ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "structure" constructor-script ) ) } &&
+	                ${ pkgs.coreutils }/bin/ln --symbolic $STRUCTURE_DIR ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } &&
 		            ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR/structure &&
 		            exit 0 &&
 		            ${ pkgs.coreutils }/bin/true
@@ -95,11 +100,11 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-secret-file = dot-gnupg : password-store-dir : pass-name : permissions : structure ''
+secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
     ${ pkgs.pass }/bin/pass show ${ pass-name } > secret.asc &&
-    ${ pkgs.coreutils }/bin/chmod ${ permissions } secret.asc &&
+    ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
     ${ pkgs.coreutils }/bin/true
 '' ;
 pass = dot-gnupg : password-store-dir : ''
@@ -109,7 +114,43 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; pass = pass ; } ;
+initialize = ''
+export HOME=$HOME/initialize &&
+    ${ pkgs.coreutils }/bin/mkdir $HOME &&
+    cd $HOME &&
+    BRANCH=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
+    ${ pkgs.gnupg }/bin/gpg --batch --import ${ private "gpg-private-keys.asc" } &&
+    ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ private "gpg-ownertrust.asc" } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import ${ private "gpg2-private-keys.asc" } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ private "gpg2-ownertrust.asc" } &&
+    ${ pkgs.pass }/bin/pass init $( ${ pkgs.gnupg }/bin/gpg --keyid-format LONG -k "$1" | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.coreutils }/bin/cut --fields 2 --delimiter "/" | ${ pkgs.coreutils }/bin/cut --fields 1 --delimiter " " ) &&
+    ${ pkgs.pass }/bin/pass git init &&
+    ${ pkgs.pass }/bin/pass git config user.name "$1" &&
+    ${ pkgs.pass }/bin/pass git config user.email "$2" &&
+    ${ pkgs.pass }/bin/pass git remote add origin "$3" &&
+    ${ pkgs.pass }/bin/pass git checkout --orphan $BRANCH &&
+    ${ pkgs.coreutils }/bin/cat ${ private "gpg-private-keys.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg-private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ private "gpg-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ private "gpg2-private-keys.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ private "gpg2-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
+    ${ pkgs.coreutils }/bin/echo "$4" | pass insert --multiline personal-access-token &&
+    echo BRANCH=$BRANCH &&
+    ${ pkgs.pass }/bin/pass git push origin HEAD &&
+    ( ${ pkgs.coreutils }/bin/cat <<EOF
+builtins.fetchGit {
+    url = $3 ;
+    rev = "$( ${ pkgs.pass }/bin/pass git rev-parse HEAD )" ;
+    ref = "$BRANCH" ;
+}
+EOF
+    ) &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+personal-identification-number = digits : structure ''
+${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; } ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
@@ -127,6 +168,7 @@ in pkgs.mkShell {
 	    cd $HOME &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
+	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "${ pkgs.coreutils }/bin/echo export ${ builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    read -s -p "GNUPG PASSPHRASE" GNUPG_PASSPHRASE &&
 	    echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
 	    ${ pkgs.coreutils }/bin/true
