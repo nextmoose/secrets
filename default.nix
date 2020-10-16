@@ -101,7 +101,7 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
 
     dot-ssh = hosts : includes : structure ''
 ( ${ pkgs.coreutils }/bin/cat > config <<EOF
-${ builtins.concatStringsSep "\n\n" ( builtins.concatLists [ ( builtins.map ( include : builtins.concatStringsSep " " [ "Include" include ] ) includes ) ( builtins.map ( host-name : builtins.concatStringsSep "\n" ( builtins.concatLists [ [ ( builtins.concatStringsSep " " [ "Host" host-name ] ) ] ] ) ) ( builtins.attrNames hosts ) ) ] ) }
+${ builtins.concatStringsSep "\n\n" ( builtins.concatLists [ ( builtins.map ( include : builtins.concatStringsSep " " [ "Include" include ] ) includes ) ( builtins.map ( host-name : builtins.concatStringsSep "\n" ( builtins.concatLists [ [ ( builtins.concatStringsSep " " [ "Host" host-name ] ) ] ( builtins.map ( attribute-name : attribute-name ) ( builtins.attrNames ( builtins.getAttr host-name hosts ) ) ) ] ) ) ( builtins.attrNames hosts ) ) ] ) }
 EOF
     ) &&
     ${ pkgs.coreutils }/bin/chmod 0400 config &&
