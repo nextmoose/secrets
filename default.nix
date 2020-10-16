@@ -92,11 +92,10 @@ fi &&
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
 dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
-${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } &&
-    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } &&
-    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } &&
-    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } &&
-    ${ pkgs.coreutils }/bin/echo pinentry-program ${ pkgs.pinentry-curses }/bin/pinentry > gpg-agent.conf &&
+${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
 '' ;
@@ -107,6 +106,12 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
     ${ pkgs.coreutils }/bin/true
 '' ;
+secret-value = dot-gnupg : password-store-dir : pass-name : "$( ${ pkgs.writeShellScriptBin "secret-value" ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    ${ pkgs.pass }/bin/pass show ${ pass-name } &&
+    ${ pkgs.coreutils }/bin/true
+'' }/bin/secret-value )" ;
 pass = dot-gnupg : password-store-dir : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -133,7 +138,9 @@ export HOME=$HOME/initialize &&
     ${ pkgs.coreutils }/bin/cat ${ private "gpg-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
     ${ pkgs.coreutils }/bin/cat ${ private "gpg2-private-keys.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
     ${ pkgs.coreutils }/bin/cat ${ private "gpg2-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
-    ${ pkgs.coreutils }/bin/echo "$4" | pass insert --multiline personal-access-token &&
+    ${ pkgs.coreutils }/bin/echo "$4" | ${ pkgs.pass }/bin/pass insert --multiline personal-access-token &&
+    UUID=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
+    ${ pkgs.coreutils }/bin/echo $UUID | ${ pkgs.pass }/bin/pass insert --multiline uuid &&
     echo BRANCH=$BRANCH &&
     ${ pkgs.pass }/bin/pass git push origin HEAD &&
     ( ${ pkgs.coreutils }/bin/cat <<EOF
@@ -142,15 +149,28 @@ builtins.fetchGit {
     rev = "$( ${ pkgs.pass }/bin/pass git rev-parse HEAD )" ;
     ref = "$BRANCH" ;
 }
+uuid = $UUID
 EOF
     ) &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-personal-identification-number = digits : structure ''
+personal-identification-number = digits : uuid : structure ''
 ${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; } ;
+github-ssh-key = passphrase : personal-access-token : structure ''
+${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
+    ( ${ pkgs.coreutils }/bin/cat <<EOF
+{
+    "title": "Generated Key",
+    "key": "$( ${ pkgs.coreutils }/bin/cat id_rsa.pub )"
+}
+EOF
+    ) &&
+#    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; secret-value = secret-value ; pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; github-ssh-key = github-ssh-key ; } ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
@@ -166,11 +186,11 @@ in pkgs.mkShell {
 	    } &&
 	    trap cleanup EXIT &&
 	    cd $HOME &&
-            export STRUCTURES_DIR=${ structures-dir } &&
-	    export PRIVATE_DIR=${ private-dir } &&
-	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "${ pkgs.coreutils }/bin/echo export ${ builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    read -s -p "GNUPG PASSPHRASE" GNUPG_PASSPHRASE &&
 	    echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
+            export STRUCTURES_DIR=${ structures-dir } &&
+	    export PRIVATE_DIR=${ private-dir } &&
+	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    ${ pkgs.coreutils }/bin/true
     '' ;
     buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
