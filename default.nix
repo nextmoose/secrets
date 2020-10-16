@@ -1,5 +1,4 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
-private = path : private-dir + ( "/" + path ) ;
 structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
@@ -136,31 +135,31 @@ EOF
     ${ pkgs.coreutils }/bin/true
 '' ;
 cfg = import config pkgs {
-    private = private ;
+    private = path : private-dir + ( "/" + path ) ;
     temporary-directory = temporary-directory ;
     dot-gnupg = dot-gnupg ;
     secret-file = secret-file ;
     secret-value = secret-value ;
     pass = pass ;
-    initialize-boot-secrets = ''
+    initialize-boot-secrets = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : ''
 export HOME=$HOME/initialize &&
     ${ pkgs.coreutils }/bin/mkdir $HOME &&
     cd $HOME &&
     BRANCH=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
-    ${ pkgs.gnupg }/bin/gpg --batch --import ${ private "gpg-private-keys.asc" } &&
-    ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ private "gpg-ownertrust.asc" } &&
-    ${ pkgs.gnupg }/bin/gpg2 --import ${ private "gpg2-private-keys.asc" } &&
-    ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ private "gpg2-ownertrust.asc" } &&
+    ${ pkgs.gnupg }/bin/gpg --batch --import ${ gpg-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ gpg-ownertrust } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import ${ gpg2-private-keys } &&
+    ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ gpg2-ownertrust } &&
     ${ pkgs.pass }/bin/pass init $( ${ pkgs.gnupg }/bin/gpg --keyid-format LONG -k "$1" | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.coreutils }/bin/cut --fields 2 --delimiter "/" | ${ pkgs.coreutils }/bin/cut --fields 1 --delimiter " " ) &&
     ${ pkgs.pass }/bin/pass git init &&
     ${ pkgs.pass }/bin/pass git config user.name "$1" &&
     ${ pkgs.pass }/bin/pass git config user.email "$2" &&
     ${ pkgs.pass }/bin/pass git remote add origin "$3" &&
     ${ pkgs.pass }/bin/pass git checkout --orphan $BRANCH &&
-    ${ pkgs.coreutils }/bin/cat ${ private "gpg-private-keys.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg-private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ private "gpg-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
-    ${ pkgs.coreutils }/bin/cat ${ private "gpg2-private-keys.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ private "gpg2-ownertrust.asc" } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg-private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
     ${ pkgs.coreutils }/bin/echo "$4" | ${ pkgs.pass }/bin/pass insert --multiline personal-access-token &&
     UUID=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
     ${ pkgs.coreutils }/bin/echo $UUID | ${ pkgs.pass }/bin/pass insert --multiline uuid &&
