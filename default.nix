@@ -119,7 +119,30 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-initialize = ''
+personal-identification-number = digits : uuid : structure ''
+${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+github-ssh-key = passphrase : personal-access-token : structure ''
+${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
+    ( ${ pkgs.coreutils }/bin/cat <<EOF
+{
+    "title": "Generated Key",
+    "key": "$( ${ pkgs.coreutils }/bin/cat id_rsa.pub )"
+}
+EOF
+    ) &&
+#    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+cfg = import config pkgs {
+    private = private ;
+    temporary-directory = temporary-directory ;
+    dot-gnupg = dot-gnupg ;
+    secret-file = secret-file ;
+    secret-value = secret-value ;
+    pass = pass ;
+    initialize-boot-secrets = ''
 export HOME=$HOME/initialize &&
     ${ pkgs.coreutils }/bin/mkdir $HOME &&
     cd $HOME &&
@@ -153,30 +176,10 @@ uuid = $UUID
 EOF
     ) &&
     ${ pkgs.coreutils }/bin/true
-'' ;
-personal-identification-number = digits : uuid : structure ''
-${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
-github-ssh-key = passphrase : personal-access-token : structure ''
-${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
-    ( ${ pkgs.coreutils }/bin/cat <<EOF
-{
-    "title": "Generated Key",
-    "key": "$( ${ pkgs.coreutils }/bin/cat id_rsa.pub )"
-}
-EOF
-    ) &&
-#    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
-cfg = import config pkgs {
-    private = private ;
-    temporary-directory = temporary-directory ;
-    dot-gnupg = dot-gnupg ;
-    secret-file = secret-file ;
-    secret-value = secret-value ;
-    pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; github-ssh-key = github-ssh-key ; } ;
+    '' ;
+    personal-identification-number = personal-identification-number ;
+    github-ssh-key = github-ssh-key ;
+} ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
