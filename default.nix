@@ -90,13 +90,6 @@ fi &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
-pass = dot-gnupg : password-store-dir : ''
-export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
-    export PASSWORD_STORE_DIR=${ password-store-dir } &&
-    export PATH=$PATH &&
-    exec ${ pkgs.pass }/bin/pass $@ &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
 personal-identification-number = digits : uuid : structure ''
 ${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
     ${ pkgs.coreutils }/bin/true
@@ -122,6 +115,13 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
     '' ;
+    pass = dot-gnupg : password-store-dir : ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    export PATH=$PATH &&
+    exec ${ pkgs.pass }/bin/pass $@ &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
     private = path : private-dir + ( "/" + path ) ;
     secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
@@ -137,7 +137,6 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     ${ pkgs.coreutils }/bin/true
 '' }/bin/secret-value )" ;
     temporary-directory = temporary-directory ;
-    pass = pass ;
     initialize-boot-secrets = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : ''
 export HOME=$HOME/initialize &&
     ${ pkgs.coreutils }/bin/mkdir $HOME &&
