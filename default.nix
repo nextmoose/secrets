@@ -99,6 +99,15 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
     ${ pkgs.coreutils }/bin/true
     '' ;
 
+    dot-ssh = hosts : includes : structure ''
+( ${ pkgs.coreutils }/bin/cat > config <<EOF
+${ builtins.concatStringsSep "\n\n" ( builtins.map ( include : builtins.concatStringsSep " " [ "Include" include ] ) includes ) }
+EOF
+    ) &&
+    ${ pkgs.coreutils }/bin/chmod 0400 config &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
+
     github-ssh-key = passphrase : personal-access-token : structure ''
 ${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
     ( ${ pkgs.coreutils }/bin/cat <<EOF
