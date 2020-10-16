@@ -138,10 +138,11 @@ export HOME=$HOME/initialize &&
     ${ pkgs.pass }/bin/pass git remote add origin "$3" &&
     ${ pkgs.pass }/bin/pass git checkout --orphan $BRANCH &&
     ${ pkgs.coreutils }/bin/cat ${ gpg-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg-private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg2-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg2-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline ownertrust &&
     ${ pkgs.coreutils }/bin/echo "$4" | ${ pkgs.pass }/bin/pass insert --multiline personal-access-token &&
+    ${ pkgs.coreutils }/bin/tee | ${ pkgs.pass }/bin/pass insert --multiline user-known-hosts &&
     UUID=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
     ${ pkgs.coreutils }/bin/echo $UUID | ${ pkgs.pass }/bin/pass insert --multiline uuid &&
     echo BRANCH=$BRANCH &&
