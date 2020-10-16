@@ -90,13 +90,6 @@ fi &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
-secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
-export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
-    export PASSWORD_STORE_DIR=${ password-store-dir } &&
-    ${ pkgs.pass }/bin/pass show ${ pass-name } > secret.asc &&
-    ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
 secret-value = dot-gnupg : password-store-dir : pass-name : "$( ${ pkgs.writeShellScriptBin "secret-value" ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -136,8 +129,14 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
     ${ pkgs.coreutils }/bin/true
     '' ;
     private = path : private-dir + ( "/" + path ) ;
+    secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
+export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
+    export PASSWORD_STORE_DIR=${ password-store-dir } &&
+    ${ pkgs.pass }/bin/pass show ${ pass-name } > secret.asc &&
+    ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
     temporary-directory = temporary-directory ;
-    secret-file = secret-file ;
     secret-value = secret-value ;
     pass = pass ;
     initialize-boot-secrets = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : ''
