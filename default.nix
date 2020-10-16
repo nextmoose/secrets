@@ -89,7 +89,6 @@ fi &&
     ${ pkgs.coreutils }/bin/rm ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }.lock &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
-temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
 cfg = import config pkgs {
     dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
 ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
@@ -148,6 +147,7 @@ EOF
     ) &&
     ${ pkgs.coreutils }/bin/true
     '' ;
+
     pass = dot-gnupg : password-store-dir : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -155,10 +155,12 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
     '' ;
+
     personal-identification-number = digits : uuid : structure ''
 ${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
     ${ pkgs.coreutils }/bin/true
     '' ;
+
     private = path : private-dir + ( "/" + path ) ;
     secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
@@ -167,13 +169,18 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
     ${ pkgs.coreutils }/bin/true
     '' ;
+
     secret-value = dot-gnupg : password-store-dir : pass-name : "$( ${ pkgs.writeShellScriptBin "secret-value" ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
     ${ pkgs.pass }/bin/pass show ${ pass-name } &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/secret-value )" ;
-    temporary-directory = temporary-directory ;
+
+    temporary-directory = uuid : structure ''
+${ pkgs.coreutils }/bin/echo ${ uuid } &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
 } ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
