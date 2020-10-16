@@ -90,14 +90,6 @@ fi &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
 temporary-directory = uuid : structure "${ pkgs.coreutils }/bin/echo ${ uuid }" ;
-dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
-${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
-    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
-    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
-    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
-    ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
-    ${ pkgs.coreutils }/bin/true
-'' ;
 secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -135,9 +127,16 @@ EOF
     ${ pkgs.coreutils }/bin/true
 '' ;
 cfg = import config pkgs {
+    dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
+${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
+    ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
     private = path : private-dir + ( "/" + path ) ;
     temporary-directory = temporary-directory ;
-    dot-gnupg = dot-gnupg ;
     secret-file = secret-file ;
     secret-value = secret-value ;
     pass = pass ;
