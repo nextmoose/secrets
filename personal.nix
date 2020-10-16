@@ -11,7 +11,7 @@ in {
     variables = {
         report-personal-identification-number = "$( ${ pkgs.coreutils }/bin/cat ${ tools.personal-identification-number 6 "35b2449c-b89a-4994-97f6-621436d161fc" }/personal-identification-number.asc )" ;
 	personal-access-token = tools.secret-value boot-gnupg ( builtins.fetchGit { url = https://github.com/nextmoose/secrets ; rev = "6e457eef3ac2004bed87130f968b1bdf6985df8c" ; ref = "c1780887-2bab-4bbe-bd2e-428dd192aa20" ; } ) "personal-access-token" ;
-	dot-ssh = tools.dot-ssh [ "try me" ] [ "try2" ] ;
+	dot-ssh = tools.dot-ssh { upstream = { host = "github.com" ; user = "git" ; identity-file = "upstream placeholder" ; } ; personal = { host = "github.com" ; user = "git" ; identity-file = "personal placeholder" ; } ; report = { host = "github.com" ; user = "git" ; identity-file = "report placeholder" ; } ; } [ "try2" ] ;
 	uuid = "41a38a57-ab6c-4533-944e-5a134b89c075" ;
     } ;
 }
