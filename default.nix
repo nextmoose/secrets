@@ -173,13 +173,13 @@ ${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete -
     '' ;
 
     private = path : private-dir + ( "/" + path ) ;
-    secret-file = dot-gnupg : password-store-dir : pass-name : structure ''
+    secret-file = dot-gnupg : password-store-dir : pass-name : "${ structure ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg }" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
     ${ pkgs.pass }/bin/pass show ${ pass-name } > secret.asc &&
     ${ pkgs.coreutils }/bin/chmod 0400 secret.asc &&
     ${ pkgs.coreutils }/bin/true
-    '' ;
+    '' }/secret.asc" ;
 
     secret-value = dot-gnupg : password-store-dir : pass-name : "$( ${ pkgs.writeShellScriptBin "secret-value" ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
