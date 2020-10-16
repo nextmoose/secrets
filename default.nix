@@ -170,7 +170,13 @@ EOF
 #    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
     ${ pkgs.coreutils }/bin/true
 '' ;
-cfg = import config pkgs { structure = structure ; private = private ; temporary-directory = temporary-directory ; dot-gnupg = dot-gnupg ; secret-file = secret-file ; secret-value = secret-value ; pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; github-ssh-key = github-ssh-key ; } ;
+cfg = import config pkgs {
+    private = private ;
+    temporary-directory = temporary-directory ;
+    dot-gnupg = dot-gnupg ;
+    secret-file = secret-file ;
+    secret-value = secret-value ;
+    pass = pass ; initialize = initialize ; personal-identification-number = personal-identification-number ; github-ssh-key = github-ssh-key ; } ;
 derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
@@ -186,8 +192,12 @@ in pkgs.mkShell {
 	    } &&
 	    trap cleanup EXIT &&
 	    cd $HOME &&
-	    read -s -p "GNUPG PASSPHRASE" GNUPG_PASSPHRASE &&
-	    echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
+	    while ! boot-secrets show uuid
+	    do
+	        read -s -p "GNUPG PASSPHRASE? " GNUPG_PASSPHRASE &&
+	        echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
+		${ pkgs.coreutils }/bin/true
+	    done &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
 	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
