@@ -1,4 +1,5 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
+environment-case = string : builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] string ;
 structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
@@ -101,7 +102,7 @@ ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --imp
 
     dot-ssh = hosts : includes : structure ''
 ( ${ pkgs.coreutils }/bin/cat > config <<EOF
-${ builtins.concatStringsSep "\n\n" ( builtins.concatLists [ ( builtins.map ( include : builtins.concatStringsSep " " [ "Include" include ] ) includes ) ( builtins.map ( host-name : builtins.concatStringsSep "\n" ( builtins.concatLists [ [ ( builtins.concatStringsSep " " [ "Host" host-name ] ) ] ( builtins.map ( attribute-name : attribute-name ) ( builtins.attrNames ( builtins.getAttr host-name hosts ) ) ) ] ) ) ( builtins.attrNames hosts ) ) ] ) }
+${ builtins.concatStringsSep "\n\n" ( builtins.concatLists [ ( builtins.map ( include : builtins.concatStringsSep " " [ "Include" include ] ) includes ) ( builtins.map ( host-name : builtins.concatStringsSep "\n" ( builtins.concatLists [ [ ( builtins.concatStringsSep " " [ "Host" host-name ] ) ] ( builtins.map ( attribute-name : builtins.concatStringsSep " " [ ( environment-case attribute-name ) ( builtins.getAttr attribute-name ( builtins.getAttr host-name hosts ) ) ] ) ( builtins.attrNames ( builtins.getAttr host-name hosts ) ) ) ] ) ) ( builtins.attrNames hosts ) ) ] ) }
 EOF
     ) &&
     ${ pkgs.coreutils }/bin/chmod 0400 config &&
@@ -214,8 +215,8 @@ in pkgs.mkShell {
 	    done &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
-	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
+	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ environment-case name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    ${ pkgs.coreutils }/bin/true
     '' ;
-    buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
+    buildInputs = builtins.concatLists [ [ pkgs.gnupg pkgs.openssh ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
 }
