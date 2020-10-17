@@ -109,6 +109,19 @@ EOF
     ${ pkgs.coreutils }/bin/true
     '' ;
 
+    fetch-git = ssh-config : committer-name : committer-email : upstream-remote : upstream-branch : personal-remote : report-remote : structure ''
+${ pkgs.git }/bin/git init &&
+    ${ pkgs.git }/bin/git config core.sshCommand ${ pkgs.writeShellScriptBin "ssh" "exec ${ pkgs.openssh }/bin/ssh -F ${ ssh-config } $@" } &&
+    ${ pkgs.git }/bin/git config user.name "${ committer-name }" &&
+    ${ pkgs.git }/bin/git config user.email "${ committer-email }" &&
+    ${ pkgs.git }/bin/git remote add upstream ${ upstream-remote } &&
+    ${ pkgs.git }/bin/git set-url --push origin no_push &&
+    ${ pkgs.git }/bin/git remote add personal ${ personal-remote } &&
+    ${ pkgs.git }/bin/git remote add report ${ report-remote } &&
+    ${ pkgs.git }/bin/git fetch upstream ${ upstream-branch } &&
+    ${ pkgs.git }/bin/git checkout ${ upstream-branch } &&
+    '' ;
+
     github-ssh-key = passphrase : personal-access-token : "${ structure ''
 ${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
     ( ${ pkgs.coreutils }/bin/cat <<EOF
