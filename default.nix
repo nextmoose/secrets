@@ -117,7 +117,7 @@ ${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated ke
     "key": "$( ${ pkgs.coreutils }/bin/cat id-rsa.pub )"
 }
 EOF
-    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
+    ) | ${ pkgs.curl }/bin/curl --silent --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
 '' }/id-rsa" ;
