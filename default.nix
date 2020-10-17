@@ -109,18 +109,18 @@ EOF
     ${ pkgs.coreutils }/bin/true
     '' ;
 
-    github-ssh-key = passphrase : personal-access-token : structure ''
+    github-ssh-key = passphrase : personal-access-token : "${ structure ''
 ${ pkgs.openssh }/bin/ssh-keygen -f id-rsa -P "${ passphrase }" -C "generated key" &&
     ( ${ pkgs.coreutils }/bin/cat <<EOF
 {
     "title": "Generated Key",
-    "key": "$( ${ pkgs.coreutils }/bin/cat id_rsa.pub )"
+    "key": "$( ${ pkgs.coreutils }/bin/cat id-rsa.pub )"
 }
 EOF
-    ) &&
-#    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
+    ) | ${ pkgs.curl }/bin/curl --header "Authorization: token ${ personal-access-token }" --header "Content-Type: application/json" --request POST --data @- https://api.github.com/user/keys > response.json &&
+    ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.coreutils }/bin/true
-'' ;
+'' }/id-rsa" ;
 
     initialize-boot-secrets = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : ''
 export HOME=$HOME/initialize &&
@@ -168,7 +168,14 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     '' ;
 
     personal-identification-number = digits : uuid : structure ''
-${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
+if [ ${ builtins.toString digits } -eq 0 ]
+then
+    ${ pkgs.coreutils }/bin/touch personal-identification-number.asc &&
+        ${ pkgs.coreutils }/bin/true
+else
+    ${ pkgs.coreutils }/bin/cat /dev/urandom | ${ pkgs.coreutils }/bin/tr --delete --complement "0-9" | ${ pkgs.coreutils }/bin/fold --width ${ builtins.toString digits } | ${ pkgs.coreutils }/bin/head --lines 1 > personal-identification-number.asc &&
+    ${ pkgs.coreutils }/bin/true
+fi &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
