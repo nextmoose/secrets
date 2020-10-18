@@ -11,64 +11,87 @@ fi &&
             if [ -d ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ]
             then
 	        STRUCTURE_DIR=$( ${ pkgs.coreutils }/bin/readlink --canonicalize ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ) &&
-	            if [ $( ${ pkgs.coreutils }/bin/readlink --canonicalize $STRUCTURE_DIR/constructor ) != "${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor" ]
+		    if [ ! -f $STRUCTURE_DIR/hash.asc ]
+		    then
+		        ${ pkgs.coreutils }/bin/echo Missing Hash File >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+			    exit 64 &&
+			    ${ pkgs.coreutils }/bin/true
+	            elif [ $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/hash.asc ) != ${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } ]
+		    then
+		        ${ pkgs.coreutils }/bin/echo MISMATCHED_HASH_ERROR.  The hash should match ${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+			    exit 64 &&
+			    ${ pkgs.coreutils }/bin/true
+	            elif [ $( ${ pkgs.coreutils }/bin/readlink --canonicalize $STRUCTURE_DIR/constructor ) != "${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor" ]
 	            then
-		        ${ pkgs.coreutils }/bin/echo Constructor Script Mismatch:  $STRUCTURE_DIR/constructor does not match ${ pkgs.writeShellScriptBin "constructor" constructor-script } > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo Constructor Script Mismatch:  $STRUCTURE_DIR/constructor does not match ${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 		 	    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/before.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction before time was not recorded. > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo The construction before time was not recorded. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/after.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction after time was not recorded. > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo The construction after time was not recorded. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/exit-code.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction exit code was not recorded. > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo The construction exit code was not recorded. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) != 0 ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction errored with exit code $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo The construction errored with exit code $( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/exit-code.asc ) >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ ! -f $STRUCTURE_DIR/out.asc ]
 		    then
-		        ${ pkgs.coreutils }/bin/echo The construction did not record standard out. > $STRUCTURE_DIR/failure.asc &&
+		        ${ pkgs.coreutils }/bin/echo The construction did not record standard out. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+		            exit 64 &&
+			    ${ pkgs.coreutils }/bin/true
+		    elif [ ! -f $STRUCTURE_DIR/err.asc ]
+		    then
+		        ${ pkgs.coreutils }/bin/echo The construction did not record standard error. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+		            exit 64 &&
+			    ${ pkgs.coreutils }/bin/true
+		    elif [ ! -z "$( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/err.asc )" ]
+		    then
+		        ${ pkgs.coreutils }/bin/echo The construction recorded some standard error. >> $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    elif [ -f $STRUCTURE_DIR/failure.asc ]
 		    then
 		        ${ pkgs.coreutils }/bin/echo The construction recorded failure. >> $STRUCTURE_DIR/failure.asc &&
-		            exit 64 &&
-			    ${ pkgs.coreutils }/bin/true
-		    elif [ ! -f $STRUCTURE_DIR/err.asc ]
-		    then
-		        ${ pkgs.coreutils }/bin/echo The construction did not record standard error. > $STRUCTURE_DIR/failure.asc &&
-		            exit 64 &&
-			    ${ pkgs.coreutils }/bin/true
-		    elif [ ! -z "$( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/err.asc )" ]
-		    then
-		        ${ pkgs.coreutils }/bin/echo The construction recorded some standard error. > $STRUCTURE_DIR/failure.asc &&
+	                    ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
 		            exit 64 &&
 			    ${ pkgs.coreutils }/bin/true
 		    else
-                        ${ pkgs.coreutils }/bin/readlink --canonicalize ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }/structure &&
-		        exit 0 &&
-   	                ${ pkgs.coreutils }/bin/true
+		        ${ pkgs.coreutils }/bin/date +%s >> $STRUCTURE_DIR/log.asc &&
+                            ${ pkgs.coreutils }/bin/readlink --canonicalize ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) }/structure &&
+		            exit 0 &&
+   	                    ${ pkgs.coreutils }/bin/true
 		    fi &&
 		    ${ pkgs.coreutils }/bin/true
             else
                 STRUCTURE_DIR=$( ${ pkgs.mktemp }/bin/mktemp -d ${ structures-dir }/XXXXXXXX ) &&
+	            ${ pkgs.coreutils }/bin/echo ${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } > $STRUCTURE_DIR/hash.asc &&
+		    ${ pkgs.coreutils }/bin/ln --symbolic ${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor $STRUCTURE_DIR &&
 	            ${ pkgs.coreutils }/bin/mkdir $STRUCTURE_DIR/structure &&
 	            cd $STRUCTURE_DIR/structure &&
-		    ${ pkgs.coreutils }/bin/ln --symbolic ${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor $STRUCTURE_DIR &&
 	            ${ pkgs.coreutils }/bin/date +%s > $STRUCTURE_DIR/before.asc &&
-	            ${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor > $STRUCTURE_DIR/out.asc 2> $STRUCTURE_DIR/err.asc &&
+	            ( ${ pkgs.writeShellScriptBin "constructor" constructor-script }/bin/constructor > $STRUCTURE_DIR/out.asc 2> $STRUCTURE_DIR/err.asc || true ) &&
 	            EXIT_CODE=$? &&
 	            ${ pkgs.coreutils }/bin/date +%s > $STRUCTURE_DIR/after.asc &&
 	            ${ pkgs.coreutils }/bin/echo $EXIT_CODE > $STRUCTURE_DIR/exit-code.asc &&
@@ -83,6 +106,7 @@ fi &&
 		            exit 64 &&
 		            ${ pkgs.coreutils }/bin/true
 	            fi &&
+                    ${ pkgs.coreutils }/bin/chmod 0400 $STRUCTURE_DIR/before $STRUCTURE_DIR/out.asc $STRUCTURE_DIR/err.asc $STRUCTURE_DIR/after.asc $STRUCTURE_DIR/exit-code.asc &&
 	            ${ pkgs.coreutils }/bin/true
             fi &&
             ${ pkgs.coreutils }/bin/true
@@ -111,15 +135,16 @@ EOF
 
     fetch-git = ssh-config : committer-name : committer-email : upstream-remote : upstream-branch : personal-remote : report-remote : structure ''
 ${ pkgs.git }/bin/git init &&
-    ${ pkgs.git }/bin/git config core.sshCommand ${ pkgs.writeShellScriptBin "ssh" "exec ${ pkgs.openssh }/bin/ssh -F ${ ssh-config } $@" } &&
+    ${ pkgs.git }/bin/git config core.sshCommand ${ pkgs.writeShellScriptBin "ssh" "exec ${ pkgs.openssh }/bin/ssh -F ${ ssh-config } $@" }/bin/ssh &&
     ${ pkgs.git }/bin/git config user.name "${ committer-name }" &&
     ${ pkgs.git }/bin/git config user.email "${ committer-email }" &&
     ${ pkgs.git }/bin/git remote add upstream ${ upstream-remote } &&
-    ${ pkgs.git }/bin/git set-url --push origin no_push &&
+    ${ pkgs.git }/bin/git remote set-url --push upstream no_push &&
     ${ pkgs.git }/bin/git remote add personal ${ personal-remote } &&
     ${ pkgs.git }/bin/git remote add report ${ report-remote } &&
-    ${ pkgs.git }/bin/git fetch upstream ${ upstream-branch } &&
-    ${ pkgs.git }/bin/git checkout ${ upstream-branch } &&
+    ${ pkgs.git }/bin/git fetch upstream ${ upstream-branch } 2> err.asc &&
+    ${ pkgs.git }/bin/git checkout ${ upstream-branch } 2>> err.asc &&
+    ${ pkgs.coreutils }/bin/true
     '' ;
 
     github-ssh-key = passphrase : personal-access-token : "${ structure ''
@@ -239,5 +264,5 @@ in pkgs.mkShell {
 	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ environment-case name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    ${ pkgs.coreutils }/bin/true
     '' ;
-    buildInputs = builtins.concatLists [ [ pkgs.gnupg pkgs.openssh ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
+    buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
 }
