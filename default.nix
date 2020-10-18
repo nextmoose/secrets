@@ -283,6 +283,7 @@ in pkgs.mkShell {
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
 	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ environment-case name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
+	    ${ builtins.concatStringsSep "\n" ( builtins.map ( source : "source ${ source } &&" ) cfg.sources ) }
 	    ${ pkgs.coreutils }/bin/true
     '' ;
     buildInputs = builtins.concatLists [ [ pkgs.pass ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
