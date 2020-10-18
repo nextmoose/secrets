@@ -215,8 +215,8 @@ EOF
     pass = dot-gnupg : password-store-dir : extensions : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
-    export PASSWORD_STORE_ENABLE_EXTENSIONS=${ builtins.toString ( builtins.length ( builtins.attrNames extensions ) != 0 ) } &&
-    export PASSWORD_STORE_EXTENSIONS_DIR=${ if builtins.length ( builtins.attrNames extensions ) == 0 then "" else pkgs.stdenv.mkDerivation { name = "password-store-extensions-dir" ; src = ./empty ; buildInputs = [ pkgs.coreutils pkgs.makeWrapper ] ; installPhase = "mkdir $out && ${ builtins.concatStringsSep " && \n" ( builtins.map ( name : "makeWrapper ${ builtins.getAttr name extensions }/bin/${ name } $out/${ name }.bash" ) ( builtins.attrNames extensions ) ) } && true" ; } } &&
+    export PASSWORD_STORE_ENABLE_EXTENSIONS=${ if builtins.length ( builtins.attrNames extensions ) != 0 then "true" else "false" } &&
+    export PASSWORD_STORE_EXTENSIONS_DIR=${ if builtins.length ( builtins.attrNames extensions ) == 0 then "" else pkgs.stdenv.mkDerivation { name = "password-store-extensions-dir" ; src = ./empty ; buildInputs = [ pkgs.coreutils pkgs.makeWrapper ] ; installPhase = "mkdir $out && ${ builtins.concatStringsSep " && \n" ( builtins.map ( name : "makeWrapper ${ pkgs.writeShellScriptBin name ( builtins.getAttr name extensions ) }/bin/${ name } $out/${ name }.bash" ) ( builtins.attrNames extensions ) ) } && true" ; } } &&
     export PATH=$PATH &&
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
