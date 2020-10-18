@@ -121,11 +121,13 @@ fi &&
 '' }/bin/structure )" ;
 cfg = import config pkgs {
     dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
-${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
+${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
+    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
     ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
+    ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --update-trustdb 2> err.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
-    ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
+    ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --update-trustdb 2> err.asc &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
@@ -149,6 +151,14 @@ ${ pkgs.git }/bin/git init &&
     ${ pkgs.git }/bin/git remote add report ${ report-remote } &&
     ${ pkgs.git }/bin/git fetch upstream ${ upstream-branch } 2> err.asc &&
     ${ pkgs.git }/bin/git checkout ${ upstream-branch } 2>> err.asc &&
+    ${ pkgs.coreutils }/bin/ln --symbolic ${ pkgs.writeShellScriptBin "post-commit" ''
+while ! ${ pkgs.git }/bin/git push personal HEAD
+do
+    ${ pkgs.coreutils }/bin/sleep 1s &&
+        ${ pkgs.coreutils }/bin/true
+done &&
+    ${pkgs.coreutils }/bin/true
+    '' }/bin/post-commit .git/hooks &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
@@ -174,7 +184,7 @@ export HOME=$HOME/initialize &&
     ${ pkgs.gnupg }/bin/gpg --import-ownertrust ${ gpg-ownertrust } &&
     ${ pkgs.gnupg }/bin/gpg2 --import ${ gpg2-private-keys } &&
     ${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ${ gpg2-ownertrust } &&
-    ${ pkgs.pass }/bin/pass init $( ${ pkgs.gnupg }/bin/gpg --keyid-format LONG -k "$1" | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.coreutils }/bin/cut --fields 2 --delimiter "/" | ${ pkgs.coreutils }/bin/cut --fields 1 --delimiter " " ) &&
+    ${ pkgs.pass }/bin/pass init $( ${ pkgs.gnupg }/bin/gpg --keyid-format LONG -k "$1" | ${ pkgs.coreutils }/bin/head --lines 4 | ${ pkgs.coreutils }/bin/tail --lines 1 | ${ pkgs.coreutils }/bin/cut --fields 2 --delimiter "/" | ${ pkgs.coreutils }/bin/cut --fields 1 --delimiter " " ) &&
     ${ pkgs.pass }/bin/pass git init &&
     ${ pkgs.pass }/bin/pass git config user.name "$1" &&
     ${ pkgs.pass }/bin/pass git config user.email "$2" &&
