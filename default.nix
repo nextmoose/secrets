@@ -1,5 +1,8 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
 environment-case = string : builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] string ;
+dollar = "$" ;
+open-curly-bracket = "{" ;
+close-curly-bracket = "}" ;
 structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
@@ -222,6 +225,8 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     ${ pkgs.coreutils }/bin/true
     '' ;
 
+    pass-completion = name : dot-gnupg : password-store-dir : pkgs.writeText "pass" ( builtins.replaceStrings [ "${ dollar }${ open-curly-bracket }PASSWORD_STORE_DIR:-$HOME/.password-store/${ close-curly-bracket }" "_pass" " pass" ] [ password-store-dir "_pass_${ builtins.hashString "sha512" name }" " ${ name }" ] ( builtins.readFile "${ pkgs.pass }/share/bash-completion/completions/pass" ) ) ;
+
     personal-identification-number = digits : uuid : structure ''
 if [ ${ builtins.toString digits } -eq 0 ]
 then
@@ -280,5 +285,5 @@ in pkgs.mkShell {
 	    ${ builtins.concatStringsSep "\n" ( builtins.map ( name : "export ${ environment-case name }=\"${ builtins.getAttr name cfg.variables }\" &&" ) ( builtins.attrNames cfg.variables ) ) }
 	    ${ pkgs.coreutils }/bin/true
     '' ;
-    buildInputs = builtins.concatLists [ [ pkgs.gnupg ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
+    buildInputs = builtins.concatLists [ [ pkgs.pass ] ( builtins.map ( name : pkgs.writeShellScriptBin name ( builtins.getAttr name cfg.derivations ) ) ( builtins.attrNames cfg.derivations ) ) ] ;
 }

@@ -23,5 +23,6 @@ in {
 	uuid = "58b1d37e-fd82-41e9-aeca-092075b5c2c5" ;
 	dot-gnupg = tools.dot-gnupg ( tools.private "gpg-private-keys.asc" ) ( tools.private "gpg-ownertrust.asc" ) ( tools.private "gpg2-private-keys.asc" ) ( tools.private "gpg2-ownertrust.asc" ) ;
 	bootit = bootit ;
+	pass-completion = tools.pass-completion "boot-secrets" ( tools.dot-gnupg ( boot-secret-file "gpg-private-keys" ) ( boot-secret-file "gpg-ownertrust" ) ( boot-secret-file "gpg2-private-keys" ) ( boot-secret-file "gpg2-ownertrust" ) ) ( tools.fetch-git "${ dot-ssh }/config" "Emory Merryman" "emory.merryman@gmail.com" "upstream:nextmoose/secrets.git" "df8400df-08c0-4998-ac86-6ee210076eab" "personal:nextmoose/secrets.git" "report:nextmoose/secrets.git" ) ;
     } ;
 }
