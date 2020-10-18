@@ -1,15 +1,5 @@
 { pkgs ? import <nixpkgs> { } , structures-dir ? builtins.concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "structures" ] , private-dir ? /. + ( builtins. concatStringsSep "/" [ ( builtins.getEnv "HOME" ) ".nix-shell" "private" ] ) , config } : let
 environment-case = string : builtins.replaceStrings [ "q" "w" "e" "r" "t" "y" "u" "i" "o" "p" "a" "s" "d" "f" "g" "h" "j" "k" "l" "z" "x" "c" "v" "b" "n" "m" "-" ] [ "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P" "A" "S" "D" "F" "G" "H" "J" "K" "L" "Z" "X" "C" "V" "B" "N" "M" "_" ] string ;
-password-store-extensions-dir = extensions : pkgs.stdenv.mkDerivation {
-    name = "password-store-extensions-dir" ;
-    src = ./empty ;
-    buildInputs = [ pkgs.coreutils ] ;
-    installPhase = ''
-        ${ pkgs.coreutils }/bin/mkdir $out &&
-	    
-	    ${ pkgs.coreutils }/bin/true
-    '' ;
-} ;
 structure = constructor-script : "$( ${ pkgs.writeShellScriptBin "structure" ''
 if [ ! -d ${ structures-dir } ]
 then
@@ -225,7 +215,8 @@ EOF
     pass = dot-gnupg : password-store-dir : extensions : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
-    export PASSWORD_STORE_ENABLE_EXTENSIONS=true &&
+    export PASSWORD_STORE_ENABLE_EXTENSIONS=${ builtins.toString ( builtins.length ( builtins.attrNames extensions ) != 0 ) } &&
+    export PASSWORD_STORE_EXTENSIONS_DIR=${ if builtins.length ( builtins.attrNames extensions ) == 0 then "" else pkgs.stdenv.mkDerivation { name = "password-store-extensions-dir" ; src = ./empty ; buildInputs = [ pkgs.coreutils pkgs.makeWrapper ] ; installPhase = "mkdir $out && ${ builtins.concatStringsSep " && \n" ( builtins.map ( name : "makeWrapper ${ builtins.getAttr name extensions }/bin/${ name } $out/${ name }.bash" ) ( builtins.attrNames extensions ) ) } && true" ; } } &&
     export PATH=$PATH &&
     exec ${ pkgs.pass }/bin/pass $@ &&
     ${ pkgs.coreutils }/bin/true
