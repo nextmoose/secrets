@@ -95,15 +95,20 @@ fi &&
 	            EXIT_CODE=$? &&
 	            ${ pkgs.coreutils }/bin/date +%s > $STRUCTURE_DIR/after.asc &&
 	            ${ pkgs.coreutils }/bin/echo $EXIT_CODE > $STRUCTURE_DIR/exit-code.asc &&
-	            if [ $EXIT_CODE == 0 ]
+	            if [ $EXIT_CODE != 0 ]
 	            then
+	                ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+		            exit 64 &&
+		            ${ pkgs.coreutils }/bin/true
+		    elif [ ! -z "$( ${ pkgs.coreutils }/bin/cat $STRUCTURE_DIR/err.asc )" ]
+		    then
+	                ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
+		            exit 64 &&
+		            ${ pkgs.coreutils }/bin/true
+                    else
 	                ${ pkgs.coreutils }/bin/ln --symbolic $STRUCTURE_DIR ${ structures-dir }/${ builtins.hashString "sha512" ( builtins.toString ( pkgs.writeShellScriptBin "constructor" constructor-script ) ) } &&
 		            ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR/structure &&
 		            exit 0 &&
-		            ${ pkgs.coreutils }/bin/true
-                    else
-	                ${ pkgs.coreutils }/bin/echo $STRUCTURE_DIR &&
-		            exit 64 &&
 		            ${ pkgs.coreutils }/bin/true
 	            fi &&
                     ${ pkgs.coreutils }/bin/chmod 0400 $STRUCTURE_DIR/before $STRUCTURE_DIR/out.asc $STRUCTURE_DIR/err.asc $STRUCTURE_DIR/after.asc $STRUCTURE_DIR/exit-code.asc &&
