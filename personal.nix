@@ -14,7 +14,7 @@ in {
     boot-secrets = pkgs.writeShellScriptBin "boot-secrets" ( tools.pass ( tools.dot-gnupg ( tools.private "gpg-private-keys.asc" ) ( tools.private "gpg-ownertrust.asc" ) ( tools.private "gpg2-private-keys.asc" ) ( tools.private "gpg2-ownertrust.asc" ) ) bootit ) ;
     derivations = {
 	initialize-boot-secrets = tools.initialize-boot-secrets ( tools.private "gpg-private-keys.asc" ) ( tools.private "gpg-ownertrust.asc" ) ( tools.private "gpg2-private-keys.asc" ) ( tools.private "gpg2-ownertrust.asc" );
-	boot-secrets-2 = tools.pass ( tools.dot-gnupg ( boot-secret-file "gpg-private-keys" ) ( boot-secret-file "gpg-ownertrust" ) ( boot-secret-file "gpg2-private-keys" ) ( boot-secret-file "gpg2-ownertrust" ) ) ( tools.fetch-git "${ dot-ssh }/config" "Emory Merryman" "emory.merryman@gmail.com" "upstream:nextmoose/secrets.git" "df8400df-08c0-4998-ac86-6ee210076eab" "personal:nextmoose/secrets.git" "report:nextmoose/secrets.git" ) ;
+	boot-secrets = tools.pass ( tools.dot-gnupg ( boot-secret-file "gpg-private-keys" ) ( boot-secret-file "gpg-ownertrust" ) ( boot-secret-file "gpg2-private-keys" ) ( boot-secret-file "gpg2-ownertrust" ) ) ( tools.fetch-git "${ dot-ssh }/config" "Emory Merryman" "emory.merryman@gmail.com" "upstream:nextmoose/secrets.git" "df8400df-08c0-4998-ac86-6ee210076eab" "personal:nextmoose/secrets.git" "report:nextmoose/secrets.git" ) ;
     } ;
     variables = {
         report-personal-identification-number = "$( ${ pkgs.coreutils }/bin/cat ${ report-personal-identification-number }/personal-identification-number.asc )" ;

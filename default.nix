@@ -121,17 +121,11 @@ fi &&
 '' }/bin/structure )" ;
 cfg = import config pkgs {
     dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
-${ pkgs.coreutils}/bin/echo AAA 0001000 >> check.asc &&
 ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
-${ pkgs.coreutils}/bin/echo AAA 0002000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
-${ pkgs.coreutils}/bin/echo AAA 0003000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
-${ pkgs.coreutils}/bin/echo AAA 0004000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
-${ pkgs.coreutils}/bin/echo AAA 0005000 >> check.asc &&
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
-${ pkgs.coreutils}/bin/echo AAA 0006000 >> check.asc &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
