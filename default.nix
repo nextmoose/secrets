@@ -249,7 +249,6 @@ ${ pkgs.coreutils }/bin/echo ${ uuid } &&
     ${ pkgs.coreutils }/bin/true
 '' ;
 } ;
-derivations = cfg.derivations ;
 in pkgs.mkShell {
     shellHook = ''
         if [ ! -d ${ structures-dir } ]
@@ -264,7 +263,7 @@ in pkgs.mkShell {
 	    } &&
 	    trap cleanup EXIT &&
 	    cd $HOME &&
- 	    while ! boot-secrets show uuid
+ 	    while ! ${ cfg.boot-secrets }/bin/boot-secrets show uuid
  	    do
  	        read -s -p "GNUPG PASSPHRASE? " GNUPG_PASSPHRASE &&
  	        echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
