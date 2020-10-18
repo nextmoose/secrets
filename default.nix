@@ -121,11 +121,17 @@ fi &&
 '' }/bin/structure )" ;
 cfg = import config pkgs {
     dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
+${ pkgs.coreutils}/bin/echo AAA 0001000 >> check.asc &&
 ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
+${ pkgs.coreutils}/bin/echo AAA 0002000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg-ownertrust } 2> err.asc &&
+${ pkgs.coreutils}/bin/echo AAA 0003000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import ${ gpg2-private-keys } 2> err.asc &&
+${ pkgs.coreutils}/bin/echo AAA 0004000 >> check.asc &&
     ${ pkgs.gnupg }/bin/gpg2 --homedir $( ${ pkgs.coreutils }/bin/pwd ) --import-ownertrust ${ gpg2-ownertrust } 2> err.asc &&
+${ pkgs.coreutils}/bin/echo AAA 0005000 >> check.asc &&
     ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
+${ pkgs.coreutils}/bin/echo AAA 0006000 >> check.asc &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
@@ -181,10 +187,10 @@ export HOME=$HOME/initialize &&
     ${ pkgs.pass }/bin/pass git remote add origin "$3" &&
     ${ pkgs.pass }/bin/pass git checkout --orphan $BRANCH &&
     ${ pkgs.coreutils }/bin/cat ${ gpg-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg-private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline ownertrust &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg2-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline private-keys &&
-    ${ pkgs.coreutils }/bin/cat ${ gpg2-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline ownertrust &&
-    ${ pkgs.coreutils }/bin/echo "$4" | ${ pkgs.pass }/bin/pass insert --multiline personal-access-token &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg-ownertrust &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-private-keys } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-private-keys &&
+    ${ pkgs.coreutils }/bin/cat ${ gpg2-ownertrust } | ${ pkgs.pass }/bin/pass insert --multiline gpg2-ownertrust &&
+    ${ pkgs.coreutils }/bin/echo "$4" | ${ pkgs.pass }/bin/pass insert --multiline github-personal-access-token &&
     ${ pkgs.coreutils }/bin/tee | ${ pkgs.pass }/bin/pass insert --multiline user-known-hosts &&
     UUID=$( ${ pkgs.utillinux }/bin/uuidgen ) &&
     ${ pkgs.coreutils }/bin/echo $UUID | ${ pkgs.pass }/bin/pass insert --multiline uuid &&
@@ -258,11 +264,11 @@ in pkgs.mkShell {
 	    } &&
 	    trap cleanup EXIT &&
 	    cd $HOME &&
-	    while ! boot-secrets show uuid
-	    do
-	        read -s -p "GNUPG PASSPHRASE? " GNUPG_PASSPHRASE &&
-	        echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
-		${ pkgs.coreutils }/bin/true
+ 	    while ! boot-secrets show uuid
+ 	    do
+ 	        read -s -p "GNUPG PASSPHRASE? " GNUPG_PASSPHRASE &&
+ 	        echo $GNUPG_PASSPHRASE > $HOME/.gnupg-passphrase.asc &&
+ 		${ pkgs.coreutils }/bin/true
 	    done &&
             export STRUCTURES_DIR=${ structures-dir } &&
 	    export PRIVATE_DIR=${ private-dir } &&
