@@ -126,7 +126,7 @@ cfg = import config pkgs {
     atom-project = home : atom-home : project : ''
 export HOME=${ home } &&
     export ATOM_HOME=${ atom-home } &&
-    exec ${ pkgs.atom }/bin/atom $@ ${ project } &&
+    ${ pkgs.nix }/bin/nix-shell --run "${ pkgs.atom }/bin/atom $@ ${ project }" ${ ./alternate.nix } &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
