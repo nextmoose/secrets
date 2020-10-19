@@ -123,6 +123,19 @@ fi &&
     ${ pkgs.coreutils }/bin/true
 '' }/bin/structure )" ;
 cfg = import config pkgs {
+    atom-project = home : atom-home : project : ''
+export HOME=${ home } &&
+    export ATOM_HOME=${ atom-home } &&
+    exec ${ pkgs.atom }/bin/atom $@ ${ project } &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
+
+    brackets-project = home : project : ''
+export HOME=${ home } &&
+    exec ${ pkgs.brackets }/bin/brackets $@ ${ project } &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
+
     dot-gnupg = gpg-private-keys : gpg-ownertrust : gpg2-private-keys : gpg2-ownertrust : structure ''
 ${ pkgs.coreutils }/bin/chmod 0700 $( ${ pkgs.coreutils }/bin/pwd ) &&
     ${ pkgs.gnupg }/bin/gpg --homedir $( ${ pkgs.coreutils }/bin/pwd ) --batch --import ${ gpg-private-keys } 2> err.asc &&
@@ -143,8 +156,23 @@ EOF
     ${ pkgs.coreutils }/bin/true
     '' ;
 
+    emacs-project = home : project : ''
+export HOME=${ home } &&
+    export GIT=${ pkgs.git }/bin/git &&
+    exec ${ pkgs.emacs }/bin/emacs $@ ${ project } &&
+    ${ pkgs.coreutils }/bin/true
+    '' ;
+
     fetch-git = ssh-config : committer-name : committer-email : upstream-remote : upstream-branch : personal-remote : report-remote : structure ''
 ${ pkgs.git }/bin/git init &&
+    ${ pkgs.coreutils }/bin/ln --symbolic ${ pkgs.writeShellScriptBin "post-commit" ''
+while ! ${ pkgs.git }/bin/git push personal HEAD
+do
+    ${ pkgs.coreutils }/bin/sleep 1s &&
+        ${ pkgs.coreutils }/bin/true
+done &&
+    ${pkgs.coreutils }/bin/true
+    '' }/bin/post-commit .git/hooks &&
     ${ pkgs.git }/bin/git config core.sshCommand ${ pkgs.writeShellScriptBin "ssh" "exec ${ pkgs.openssh }/bin/ssh -F ${ ssh-config } $@" }/bin/ssh &&
     ${ pkgs.git }/bin/git config user.name "${ committer-name }" &&
     ${ pkgs.git }/bin/git config user.email "${ committer-email }" &&
@@ -154,14 +182,6 @@ ${ pkgs.git }/bin/git init &&
     ${ pkgs.git }/bin/git remote add report ${ report-remote } &&
     ${ pkgs.git }/bin/git fetch upstream ${ upstream-branch } 2> err.asc &&
     ${ pkgs.git }/bin/git checkout ${ upstream-branch } 2>> err.asc &&
-    ${ pkgs.coreutils }/bin/ln --symbolic ${ pkgs.writeShellScriptBin "post-commit" ''
-while ! ${ pkgs.git }/bin/git push personal HEAD
-do
-    ${ pkgs.coreutils }/bin/sleep 1s &&
-        ${ pkgs.coreutils }/bin/true
-done &&
-    ${pkgs.coreutils }/bin/true
-    '' }/bin/post-commit .git/hooks &&
     ${ pkgs.coreutils }/bin/true
     '' ;
 
@@ -215,6 +235,11 @@ EOF
     ${ pkgs.coreutils }/bin/true
     '' ;
 
+    local-directory = uuid : structure ''
+${ pkgs.coreutils }/bin/echo ${ uuid } &&
+    ${ pkgs.coreutils }/bin/true
+'' ;
+
     pass = dot-gnupg : password-store-dir : extensions : ''
 export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopback --batch --passphrase-file $HOME/.gnupg-passphrase.asc" &&
     export PASSWORD_STORE_DIR=${ password-store-dir } &&
@@ -255,10 +280,11 @@ export PASSWORD_STORE_GPG_OPTS="--homedir ${ dot-gnupg } --pinentry-mode loopbac
     ${ pkgs.coreutils }/bin/true
 '' }/bin/secret-value )" ;
 
-    temporary-directory = uuid : structure ''
-${ pkgs.coreutils }/bin/echo ${ uuid } &&
+    sublime-project = home : project : ''
+export HOME=${ home } &&
+    exec ${ pkgs.sublime }/bin/sublime $@ ${ project } &&
     ${ pkgs.coreutils }/bin/true
-'' ;
+    '' ;
 } ;
 in pkgs.mkShell {
     shellHook = ''
