@@ -1,5 +1,5 @@
 { pkgs ? import <nixpkgs> { } } : pkgs.mkShell {
-	buildIncludes = [
+	buildInputs = [
 		pkgs.vscode
 	] ;
 }
