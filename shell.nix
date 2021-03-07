@@ -135,11 +135,11 @@ in pkgs.mkShell {
 		(
 			pkgs.writeShellScriptBin "add-wizardry-partition" ''
 				OUTPUT_DEVICE=${ dollar 1 } &&
-				INDEX=${ dollar 2 } &&
-				${ pkgs.gnused }/bin/sed -e "s#4#${ dollar "INDEX" }#" ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } &&
-				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" } &&
+				${ pkgs.coreutils }/bin/cat ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" } &&
+				NEW_INDEX=$( ${ pkgs.findutils }/bin/find $( ${ pkgs.coreutils }/bin/dirname ${ dollar "OUTPUT_DEVICE" } ) -name "$( ${ pkgs.coreutils }/bin/basename ${ dollar "OUTPUT_DEVICE" } )" | ${ pkgs.coreutils }/bin/wc --lines ) &&
+				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" }${ dollar "NEW_INDEX" } &&
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
-				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "NEW_INDEX" } ${ dollar "MOUNT" } &&
 				/usr/bin/sudo chown $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" } &&
 				${ pkgs.coreutils }/bin/cp --recursive ${ builtins.getEnv "PWD" } ${ dollar "MOUNT" } &&
 				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
