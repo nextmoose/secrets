@@ -1,4 +1,5 @@
 { pkgs ? import <nixpkgs> { } } : let
+	dollar = expression : builtins.concatStringsSep "" [ "$" "{" ( builtins.toString expression ) "}" ] ;
 	post-commit = pkgs.writeShellScriptBin "post-commit" ''
 		while ! ${ pkgs.git }/bin/git push personal HEAD
 		do
@@ -43,15 +44,24 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/cat ${ ssh-config } > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config &&
 				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/password-stores &&
-				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/password-stores/browser &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser init &&
-				${ pkgs.coreutils }/bin/ln --symbolic ${ post-commit }/bin/post-commit ${ builtins.getEnv "PWD" }/.structures/password-stores/browser/.git/hooks &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser config user.name "Emory Merryman" &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser config user.email "emory.merryman@gmail.com" &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser config core.sshCommand "${ pkgs.openssh }/bin/ssh -F ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config" &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser remote add personal personal:nextmoose/browser-secrets.git &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser fetch personal master &&
-				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/browser checkout master &&
+				pass() {
+					NAME=${ dollar 1 } &&
+					URL=${ dollar 2 } &&
+					BRANCH=${ dollar 3 } &&
+					${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } init &&
+					${ pkgs.coreutils }/bin/ln --symbolic ${ post-commit }/bin/post-commit ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" }/.git/hooks &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } config user.name "Emory Merryman" &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } config user.email "emory.merryman@gmail.com" &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } config core.sshCommand "${ pkgs.openssh }/bin/ssh -F ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config" &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } remote add personal ${ dollar "URL" } &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } fetch personal ${ dollar "BRANCH" } &&
+					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } checkout ${ dollar "BRANCH" }
+				} &&
+				pass browser personal:nextmoose/browser-secrets.git master &&
+				pass challenge personal:nextmoose/challenge-secrets.git master &&
+				pass system personal:nextmoose/secrets.git master &&
+				pass feature personal:nextmoose/secrets.git master &&
 				${ pkgs.coreutils }/bin/true
 			''
 		)
@@ -61,7 +71,11 @@ in pkgs.mkShell {
 				src = ./empty ;
 				buildInputs = [ pkgs.makeWrapper ] ;
 				installPhase = ''
-					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/browser-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/browser
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/browser-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/browser &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
+					${ pkgs.coreutils }/bin/true
 				'' ;
 			}
 		)
