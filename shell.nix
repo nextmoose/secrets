@@ -149,5 +149,12 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/cat ${ luks-setup } | /usr/bin/sudo ${ pkgs.cryptsetup }/bin/cryptsetup luksFormat ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" }
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "lvm-stuff" ''
+				OUTPUT_DEVICE=${ dollar 1 } &&
+				${ pkgs.lvm2 }/bin/pvcreate
+				# FIGURE THIS STUFF OUT
+			''
+		)
 	] ;
 }
