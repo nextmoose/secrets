@@ -117,12 +117,16 @@ in pkgs.mkShell {
 		(
 			pkgs.writeShellScriptBin "add-nix-partition" ''
 				OUTPUT_DEVICE=${ dollar 1 } &&
-				INDEX=${ dollar 2 } &&
-				${ pkgs.gnused }/bin/sed -e "s#4#${ dollar "INDEX" }#" ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } &&
-				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" } &&
+				ROOT_INDEX=${ dollar 2 } &&
+				NEW_INDEX=${ dollar 2 } &&
+				${ pkgs.gnused }/bin/sed -e "s#4#${ dollar "NEW_INDEX" }#" ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } &&
+				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" }/${ dollar "NEW_INDEX" } &&
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
-				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "NEW_INDEX" } ${ dollar "MOUNT" } &&
 				/usr/bin/sudo chown $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "ROOT_INDEX" } ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/echo "LABEL=nix         /     ext4    defaults,x-systemd.growfs    0 0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append ${ dollar "MOUNT" }/etc/fstab &&
 				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
 				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
