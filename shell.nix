@@ -81,5 +81,13 @@ in pkgs.mkShell {
 				'' ;
 			}
 		)
+		(
+			pkgs.writeShellScriptBin "fedora-sd-image" ''
+				/usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk -l | ${ pkgs.gnugrep }/bin/grep "Disk /" | ${ pkgs.gnused }/bin/sed -e "s#Disk \(/[^:]*\):.*#\1#" | ${ pkgs.coreutils }/bin/sort | ${ pkgs.coreutils }/bin/uniq &&
+				read -p "OUTPUT DEVICE" OUTPUT_DEVICE &&
+				${ pkgs.findutils }/bin/find $( ${ pkgs.coreutils }/bin/dirname ${ dollar "OUTPUT_DEVICE" } ) -name "$( ${ pkgs.coreutils }/bin/basename ${ dollar "OUTPUT_DEVICE" } )[0-9]*" -exec ${ pkgs.umount }/bin/umount {} \; &&
+				${ pkgs.curl }/bin/curl https://dl.fedoraproject.org/pub/fedora/linux/releases/33/Workstation/aarch64/images/Fedora-Workstation-33-1.3.aarch64.raw.xz | ${ pkgs.coreutils }/bin/dd of=${ dollar "OUTPUT_DEVICE" } bs=1M status=progress
+			''
+		)
 	] ;
 }
