@@ -8,7 +8,7 @@
 /usr/bin/sudo /usr/bin/apt-get install --assume-yes direnv &&
 (
     /usr/bin/cat >> ${HOME}/.bashrc <<EOF
-source ${HOME}.nix-profile/etc/profile.d/nix.sh
+source ${HOME}/.nix-profile/etc/profile.d/nix.sh
 eval "\$( /usr/bin/direnv hook bash )"
 EOF
 ) &&

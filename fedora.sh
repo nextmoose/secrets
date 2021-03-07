@@ -8,7 +8,7 @@
 /usr/bin/sudo /usr/bin/dnf install --assumeyes direnv &&
 (
     /usr/bin/cat >> ${HOME}/.bashrc <<EOF
-source ${HOME}.nix-profile/etc/profile.d/nix.sh
+source ${HOME}/.nix-profile/etc/profile.d/nix.sh
 eval "\$( /usr/bin/direnv hook bash )"
 EOF
 ) &&
