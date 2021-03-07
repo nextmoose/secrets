@@ -2,8 +2,6 @@
 
 /usr/bin/sudo /usr/bin/dnf update --assumeyes &&
 /usr/bin/sudo /usr/bin/dnf install --assumeyes curl &&
-/usr/bin/sudo /usr/bin/mkdir /nix &&
-/usr/bin/sudo /usr/bin/chown $( /usr/bin/whoami ):$( /usr/bin/whoami ) /nix &&
 /usr/bin/curl -L https://nixos.org/nix/install | /usr/bin/sh &&
 /usr/bin/sudo /usr/bin/dnf install --assumeyes direnv &&
 (
