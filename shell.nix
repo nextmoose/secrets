@@ -25,11 +25,21 @@
 		IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa
 		UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
 	'' ;
+	fedora-partitions = builtins.toFile "partitions" ''
+		n
+		4
+
+		+8GB
+		w
+
+
+
+	'' ;
 in pkgs.mkShell {
 	buildInputs = [
 		pkgs.vscode
 		(
-			pkgs.writeShellScriptBin "configure" ''
+			pkgs.writeShellScriptBin "initial-configuration" ''
 				${ pkgs.gnupg }/bin/gpg --batch --import ./.private/gpg-private-keys.asc &&
 				${ pkgs.gnupg }/bin/gpg --import-ownertrust ./.private/gpg-ownertrust.asc &&
 				${ pkgs.gnupg }/bin/gpg2 --import ./.private/gpg2-private-keys.asc &&
@@ -86,7 +96,14 @@ in pkgs.mkShell {
 				/usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk -l | ${ pkgs.gnugrep }/bin/grep "Disk /" | ${ pkgs.gnused }/bin/sed -e "s#Disk \(/[^:]*\):.*#\1#" | ${ pkgs.coreutils }/bin/sort | ${ pkgs.coreutils }/bin/uniq &&
 				read -p "OUTPUT DEVICE?  " OUTPUT_DEVICE &&
 				${ pkgs.findutils }/bin/find $( ${ pkgs.coreutils }/bin/dirname ${ dollar "OUTPUT_DEVICE" } ) -name "$( ${ pkgs.coreutils }/bin/basename ${ dollar "OUTPUT_DEVICE" } )[0-9]*" -exec ${ pkgs.umount }/bin/umount {} \; &&
-				${ pkgs.curl }/bin/curl https://dl.fedoraproject.org/pub/fedora/linux/releases/33/Workstation/aarch64/images/Fedora-Workstation-33-1.3.aarch64.raw.xz | /usr/bin/sudo ${ pkgs.coreutils }/bin/dd of=${ dollar "OUTPUT_DEVICE" } bs=1M status=progress
+				${ pkgs.curl }/bin/curl https://dl.fedoraproject.org/pub/fedora/linux/releases/33/Workstation/aarch64/images/Fedora-Workstation-33-1.3.aarch64.raw.xz | /usr/bin/sudo ${ pkgs.coreutils }/bin/dd of=${ dollar "OUTPUT_DEVICE" } bs=1M status=progress &&
+				${ pkgs.coreutils }/bin/cat ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" } &&
+				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" } &&
+				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo chown $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/cp --recursive ${ builtins.getEnv "PWD" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "OUTPUT_DEVICE" }
 			''
 		)
 	] ;
