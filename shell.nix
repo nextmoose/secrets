@@ -35,6 +35,13 @@
 
 
 	'' ;
+	luks-setup = builtins.toFile "setup" ''
+		YES
+		blueberry
+		blueberry
+
+
+	'' ;
 in pkgs.mkShell {
 	buildInputs = [
 		pkgs.vscode
@@ -100,10 +107,29 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/cat ${ fedora-partitions } | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" } &&
 				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" } &&
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
-				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }4 ${ dollar "MOUNT" } &&
 				/usr/bin/sudo chown $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" } &&
 				${ pkgs.coreutils }/bin/cp --recursive ${ builtins.getEnv "PWD" } ${ dollar "MOUNT" } &&
-				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "OUTPUT_DEVICE" }
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/cat ${ luks-setup } | /usr/bin/sudo ${ pkgs.cryptsetup }/bin/cryptsetup luksFormat ${ dollar "OUTPUT_DEVICE" }4
+			''
+		)
+		(
+			pkgs.writeShellScriptBin "add-wizardry-partition" ''
+				OUTPUT_DEVICE=${ dollar 1 } &&
+				INDEX=${ dollar 2 } &&
+				(
+					${ pkgs.coreutils }/bin/echo <<EOF
+				n
+				${ dollar "INDEX" }
+
+				+8GB
+				w
+
+
+
+				EOF
+				) | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } &&
 			''
 		)
 	] ;
