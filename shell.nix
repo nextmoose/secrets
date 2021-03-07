@@ -54,7 +54,7 @@ in pkgs.mkShell {
 					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } fetch personal ${ dollar "BRANCH" } &&
 					${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" }/.structures/password-stores/${ dollar "NAME" } checkout ${ dollar "BRANCH" }
 				} &&
-				pass boot https://github.com/nextmoose/secrets.git bbb3c3a5-1aad-42fe-9aed-e87068f661d1 &&
+				pass boot https://github.com/nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d &&
 				export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/password-stores/boot &&
 				${ pkgs.pass }/bin/pass show upstream.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa &&
 				${ pkgs.pass }/bin/pass show personal.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa &&
@@ -62,7 +62,7 @@ in pkgs.mkShell {
 				${ pkgs.pass }/bin/pass show known-hosts.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				pass browser personal:nextmoose/secrets.git 5d3b3a2b-8e3d-454a-ae5b-117123eb2c85 &&
 				pass challenge personal:nextmoose/challenge-secrets.git master &&
-				pass system personal:nextmoose/secrets.git master &&
+				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
 				pass feature personal:nextmoose/secrets.git master &&
 				${ pkgs.coreutils }/bin/true
 			''
