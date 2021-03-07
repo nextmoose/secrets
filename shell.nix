@@ -7,23 +7,23 @@
 		done
 	'' ;
 	ssh-config = builtins.toFile "config" ''
-		Host upstream
-		HostName github.com
-		User git
-		IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa
-		UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
+Host upstream
+HostName github.com
+User git
+IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa
+UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
 
-		Host personal
-		HostName github.com
-		User git
-		IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa
-		UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
+Host personal
+HostName github.com
+User git
+IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa
+UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
 
-		Host report
-		HostName github.com
-		User git
-		IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa
-		UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
+Host report
+HostName github.com
+User git
+IdentityFile ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa
+UserKnownHostsFile  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts
 	'' ;
 	fedora-partitions = builtins.toFile "partitions" ''
 n
@@ -54,10 +54,9 @@ in pkgs.mkShell {
 				${ pkgs.gnupg }/bin/gpg2 --import ./.private/gpg2-private-keys.asc &&
 				${ pkgs.gnupg }/bin/gpg2 --import-ownertrust ./.private/gpg2-ownertrust.asc &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures &&
-				${ pkgs.coreutils }/mkdir ${ builtins.getEnv "PWD" }/.structures/dot-ssh &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/dot-ssh &&
 				${ pkgs.coreutils }/bin/chmod 0700 ${ builtins.getEnv "PWD" }/.structures/dot-ssh &&
 				${ pkgs.coreutils }/bin/cat ${ ssh-config } > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config &&
-				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/password-stores &&
 				pass() {
 					NAME=${ dollar 1 } &&
@@ -79,6 +78,7 @@ in pkgs.mkShell {
 				${ pkgs.pass }/bin/pass show personal.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa &&
 				${ pkgs.pass }/bin/pass show report.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa &&
 				${ pkgs.pass }/bin/pass show known-hosts.id-rsa > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
+				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				pass browser personal:nextmoose/secrets.git 5d3b3a2b-8e3d-454a-ae5b-117123eb2c85 &&
 				pass challenge personal:nextmoose/challenge-secrets.git master &&
 				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
