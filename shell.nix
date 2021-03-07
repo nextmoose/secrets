@@ -130,6 +130,13 @@ in pkgs.mkShell {
 
 				EOF
 				) | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } &&
+				/usr/bin/sudo ${ pkgs.utillinux }/bin/mkfs -t ext4 ${ dollar "OUTPUT_DEVICE" } &&
+				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar "OUTPUT_DEVICE" }${ dollar "INDEX" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo chown $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/cp --recursive ${ builtins.getEnv "PWD" } ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
 		)
 	] ;
