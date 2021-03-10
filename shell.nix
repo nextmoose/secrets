@@ -165,9 +165,9 @@ in pkgs.mkShell {
 			pkgs.writeShellScriptBin "ubuntu-400" ''
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar 1 } ${ dollar "MOUNT" } &&
-				${ pkgs.coreutils }/bin/cat ${ builtins.getEnv "PWD" }/.private/HOME-3DE8.nmconnection > ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
-				${ pkgs.coreutils }/bin/chmod 0600 ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
-				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
+				${ pkgs.coreutils }/bin/cat ${ builtins.getEnv "PWD" }/.private/HOME-3DE8.nmconnection | /usr/bins/sudo ${ pkgs.coreutils }/bin/tee ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/chmod 0600 ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
 		)
 	] ;
