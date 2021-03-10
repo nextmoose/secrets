@@ -163,11 +163,16 @@ in pkgs.mkShell {
 		)
 		(
 			pkgs.writeShellScriptBin "ubuntu-400" ''
+				${ pkgs.coreutils }/bin/echo To prepare for this, I ran sudo cp /etc/NetworkManager/system-connections/HOME-3DE8.nmconnection .private/HOME-3DE8.nmconnection &&
+				${ pkgs.coreutils }/bin/echo This contains my ssid and wifi password.  I hope this is everything necessary to hook up wifi. &&
+				${ pkgs.coreutils }/bin/echo This will only work for my wifi - not yours. &&
+				${ pkgs.coreutils }/bin/echo But the goal is that the resulting sd-card is closer to "just use it" condition and needs less setup. &&
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ dollar 1 } ${ dollar "MOUNT" } &&
-				${ pkgs.coreutils }/bin/cat ${ builtins.getEnv "PWD" }/.private/HOME-3DE8.nmconnection | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ${ builtins.getEnv "PWD" }/.private/HOME-3DE8.nmconnection ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/chmod 0600 ${ dollar "MOUNT" }/etc/NetworkManager/system-connections/HOME-3DE8.nmconnection &&
-				/usr/bin/sudo ${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
 		)
 	] ;
