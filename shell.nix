@@ -176,10 +176,10 @@ in pkgs.mkShell {
 			''
 		)
 		(
-			pkgs.writeShellScriptBin "ubuntu-preseed-file" ''
+			pkgs.writeShellScriptBin "ubuntu-current-preseed-file" ''
 				if [ ${ dollar "#" } == 0 ]
 				then
-					OUTPUT_FILE=${ builtins.getEnv "PWD" }/preseed.cfg
+					OUTPUT_FILE=${ builtins.getEnv "PWD" }/current-preseed.cfg
 				else
 					OUTPUT_FILE=${ dollar 1 }
 				fi &&
