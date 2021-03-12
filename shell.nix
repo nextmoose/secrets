@@ -175,5 +175,18 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "ubuntu-600" ''
+				if [ ${ dollar "#" } == 0 ]
+				then
+					OUTPUT_FILE=${ builtins.getEnv "PWD" }/preseed.cfg
+				else
+					OUTPUT_FILE=${ dollar 1 }
+				fi &&
+				/usr/bin/sudo /usr/bin/debconf-get-selections --installer > ${ dollar "OUPTUT_FILE" } &&
+				/usr/bin/sudo /usr/bin/debconf-get-selections >> ${ dollar "OUTPUT_FILE" } &&
+				${ pkgs.coreutils }/bin/chmod 0400 ${ dollar "OUTPUT_FILE" }
+			''
+		)
 	] ;
 }
