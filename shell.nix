@@ -188,5 +188,16 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/chmod 0400 ${ dollar "OUTPUT_FILE" }
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "kludge-install-system-config-kickstart" ''
+				# Based on https://askubuntu.com/a/1242391
+				cd $( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				${ pkgs.wget }/bin/wget http://old-releases.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-gtk2_2.24.0-6_amd64.deb &&
+				${ pkgs.wget }/bin/wget http://old-releases.ubuntu.com/ubuntu/pool/universe/p/pygtk/python-glade2_2.24.0-6_amd64.deb &&
+				${ pkgs.wget }/bin/wget http://archive.ubuntu.com/ubuntu/pool/universe/s/system-config-kickstart/system-config-kickstart_2.5.20-0ubuntu25_all.deb &&
+				/usr/bin/sudo /usr/bin/apt-get update --assume-yes &&
+				/usr/bin/sudo /usr/bin/apt-get install --assume-yes ./*.deb
+			''
+		)
 	] ;
 }
