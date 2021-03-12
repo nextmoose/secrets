@@ -199,5 +199,15 @@ in pkgs.mkShell {
 				/usr/bin/sudo /usr/bin/apt-get install --assume-yes ./*.deb
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "ubuntu-10" ''
+				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda2 ${ dollar "MOUNT" } &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp --recursive . ${ dollar "MOUNT" }/wizardry &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/chown -R $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" }/wizardry &&
+				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
+				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
+			''
+		)
 	] ;
 }
