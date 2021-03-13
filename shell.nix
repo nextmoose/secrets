@@ -218,7 +218,7 @@ in pkgs.mkShell {
 			''
 		)
 		(
-			pkgs.writeShellScriptBin "ubuntu-backup" ''
+			let script = pkgs.writeShellScriptBin "ubuntu-backup" ''
 				${ pkgs.coreutils }/bin/mkdir --parents ${ builtins.getEnv "PWD" }/backups &&
 				(
 					(
@@ -229,7 +229,7 @@ in pkgs.mkShell {
 					if [ ${ dollar "ONE" } -lt 1 ] && [ ${ dollar "FIFTEEN" } -lt 1 ]
 					then
 						TSTAMP=$( ${ pkgs.coreutils }/bin/date +%Y%m%d%H%M ) &&
-						/usr/bin/sudo ${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
+						${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
 						${ pkgs.coreutils }/bin/sha512sum ${ builtins.getEnv "PWD" }/backup.${ dollar "TSTAMP" }.img.gz | ${ pkgs.coreutils }/bin/cut --bytes -128 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz.sha512 &&
 						FLAG=0 &&
 						${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --printf "%W %n" \; | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 2 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
@@ -249,7 +249,7 @@ in pkgs.mkShell {
 						done
 					fi
 				) 200> ${ builtins.getEnv "PWD" }/backups/lock
-			''
+			'' ; in pkgs.writeShellScriptBin "ubuntu-backup" "${ pkgs.coreutils }/bin/echo '* * * * *  ${ pkgs.coreutils }/bin/nice --adjustment 19 ${ script }/bin/ubuntu-backup ' | /usr/bin/sudo /usr/bin/crontab -"
 		)
 		(
 			pkgs.writeShellScriptBin "ubuntu-cron" ''
