@@ -83,6 +83,14 @@ in pkgs.mkShell {
 				pass challenge personal:nextmoose/challenge-secrets.git master &&
 				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
 				pass feature personal:nextmoose/secrets.git master &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/passwd_files &&
+				${ pkgs.coreutils }/bin/echo AKIAYZXVAKILKBVX6XFY:$( ${ pkgs.pass }/bin/pass show aws/iam/AKIAYZXVAKILKBVX6XFY ) > ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
+				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash /etc/passwd-s3fs &&
+				/usr/bin/sudo chown 0400 /etc/passwd-s3fs &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
+				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other 0 0"
 				${ pkgs.coreutils }/bin/true
 			''
 		)
