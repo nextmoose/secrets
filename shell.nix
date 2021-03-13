@@ -274,7 +274,8 @@ in pkgs.mkShell {
 		(
 			let
 				configure-gnucash = pkgs.writeShellScriptBin "configure-gnucash" ''
-					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/.password-stores/system &&
+					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
+					${ pkgs.pass }/bin/pass show &&
 					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
 					export AWS_DEFAULT_REGION=us-east-1 &&
 					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
