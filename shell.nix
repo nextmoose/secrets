@@ -276,25 +276,25 @@ in pkgs.mkShell {
 		(
 			let
 				policy-document = builtins.toFile "policy.json" ''
-					{
-						"Version": "2012-10-17",
-						"Statement": [
-							{
-								"Sid": "VisualEditor0",
-								"Effect": "Allow",
-								"Action": [
-									"s3:PutObject",
-									"s3:GetObject",
-									"s3:ListBucket",
-									"s3:DeleteObject"
-								],
-								"Resource": [
-									"arn:aws:s3:::${ dollar "BUCKET_NAME" }/*",
-									"arn:aws:s3:::${ dollar "BUCKET_NAME" }"
-								]
-							}
-						]
-					}
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"s3:PutObject",
+				"s3:GetObject",
+				"s3:ListBucket",
+				"s3:DeleteObject"
+			],
+			"Resource": [
+				"arn:aws:s3:::${ dollar "BUCKET_NAME" }/*",
+				"arn:aws:s3:::${ dollar "BUCKET_NAME" }"
+			]
+		}
+	]
+}
 				'' ;
 				configure-gnucash = pkgs.writeShellScriptBin "configure-gnucash" ''
 					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
