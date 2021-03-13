@@ -96,6 +96,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
+					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
 			}
@@ -265,5 +266,34 @@ in pkgs.mkShell {
 				) 200> ${ builtins.getEnv "PWD" }/backups/lock
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "gnucash" ''
+
+			''
+		)
+		(
+			let
+				configure-gnucash = pkgs.writeShellScriptBin "configure-gnucash" ''
+					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/.password-stores/system &&
+					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
+					export AWS_DEFAULT_REGION=us-east-1 &&
+					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-user ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) | ${ pkgs.jq }/bin/jq --raw-output
+					# CREATE A BUCKET
+					# CREATE A POLICY BINDING USER AND BUCKET
+					# REPORT GENERATED VALUES
+				'' ;
+			in pkgs.stdenv.mkDerivation {
+				name = "aws-setup" ;
+				src = ./empty ;
+				buildInputs = [ pkgs.makeWrapper ] ;
+				installPhase = ''
+					makeWrapper ${ configure-gnucash }/bin/configure-gnucash $out/bin/configure-gnucash --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
+				'' ;
+			}
+		)
+		pkgs.awscli2
+		pkgs.libuuid
 	] ;
 }

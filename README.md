@@ -5,9 +5,10 @@
 2. On the install machine
    1. Boot it up using the previously created card.
    2. Follow the install process.  (Will take a while)
-   3. When it is ready for use, open a terminal to the /wizardry directory and execute `./ubuntu.sh` (Will take a while)
-   4. When that is done.  close the terminal and open a new terminal to the /wizardry directory and execute `direnv allow .`  (Will take a while)
-   5. To verify execute `browser-pass show` and then use browser-pass to show a secret.  This should work.
+   3. When it is ready for use, open a terminal to the /wizardry directory and execute `./ubuntu.sh` (Will take a while - about 5 minutes)
+   4. When that is done.  close the terminal and open a new terminal to the /wizardry directory and execute `direnv allow .`  (Will take a while - about 5 minutes)
+   5. Execute `initial-configuration` (should not take long but requires manually inputting a passphrase)
+   6. To verify execute `browser-pass show` and then use browser-pass to show a secret.  This should work.
 
 ## To backup an image
 Run `ubuntu-backup`.  This will create a cronjob that will continuously test if
