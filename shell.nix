@@ -219,7 +219,41 @@ in pkgs.mkShell {
 		)
 		(
 			pkgs.writeShellScriptBin "ubuntu-backup" ''
-				/usr/bin/sudo ${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > backup-$( ${ pkgs.coreutils }/bin/date +%Y%m%d%H%M).img.gz
+				${ pkgs.coreutils }/bin/mkdir --parents ${ builtins.getEnv "PWD" }/backups &&
+				(
+					(
+						${ pkgs.flock }/bin/flock -nb -E 0 200 || exit 41
+					) &&
+					ONE=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\1#" ) &&
+					FIFTEEN=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\3#" ) &&
+					if [ ${ dollar "ONE" } -lt 1 ] && [ ${ dollar "FIFTEEN" } -lt 1 ]
+					then
+						TSTAMP=$( ${ pkgs.coreutils }/bin/date +%Y%m%d%H%M ) &&
+						/usr/bin/sudo ${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
+						${ pkgs.coreutils }/bin/sha512sum ${ builtins.getEnv "PWD" }/backup.${ dollar "TSTAMP" }.img.gz | ${ pkgs.coreutils }/bin/cut --bytes -128 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz.sha512 &&
+						FLAG=0 &&
+						${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --printf "%W %n" \; | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 2 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
+						do
+							if [ ${ dollar "FILE" } != ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz ] &&
+								[ ${ dollar "FLAG" } == 0 ] &&
+								[ -f ${ dollar "FILE" }.sha512 ] &&
+								${ pkgs.coreutils }/bin/diff -qrs ${ dollar "FILE" }.sha512 ${ builtins.getEnv "PWD" }/backups.${ dollar "TSTAMP" }.img.gz.sha512 &&
+								${ pkgs.coreutils }/bin/diff -qrs ${ dollar "FILE" } ${ builtins.getEnv "PWD" }/backups.${ dollar "TSTAMP" }.img.gz
+							then
+								FLAG=1
+							elif [ ${ dollar "FILE" } == ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz ] &&
+								[ FLAG==1 ]
+							then
+								${ pkgs.coreutils }/bin/rm ${ dollar "FILE" } ${ dollar "FILE" }.sha512
+							fi
+						done
+					fi
+				) 200> ${ builtins.getEnv "PWD" }/backups/lock
+			''
+		)
+		(
+			pkgs.writeShellScriptBin "ubuntu-cron" ''
+
 			''
 		)
 		(
