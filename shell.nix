@@ -91,6 +91,9 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
 				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash  ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
 				${ pkgs.coreutils }/bin/true
 			''
 		)
@@ -333,7 +336,9 @@ in pkgs.mkShell {
 					POLICY_ARN=$( ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --policy-document file://${ dollar "POLICY_DOCUMENT" } | ${ pkgs.jq }/bin/jq --raw-output ".Policy.Arn" ) &&
 					${ pkgs.awscli2 }/bin/aws iam attach-user-policy --user-name ${ dollar "USER_NAME" } --policy-arn ${ dollar "POLICY_ARN" } &&
 					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
-					${ pkgs.coreutils }/bin/true
+					${ pkgs.coreutils }/bin/true &&
+					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+					${ pkgs.encfs }/bin/encfs ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
