@@ -278,13 +278,18 @@ in pkgs.mkShell {
 					${ pkgs.pass }/bin/pass show &&
 					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
 					export AWS_DEFAULT_REGION=us-east-1 &&
+					BUCKET_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					POLICY_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					COMMIT_HASH=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) &&
+					${ pkgs.coreutils }/bin/echo BUCKET_NAME=${ dollar "BUCKET_NAME" } &&
 					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
 					${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
 					${ pkgs.coreutils }/bin/echo POLICY_NAME=${ dollar "POLICY_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws s3api create-bucket --acl private --bucket ${ dollar "BUCKET_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-tagging --bucket ${ dollar "BUCKET_NAME" } --tagging Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-versioning --bucket ${ dollar "BUCKET_NAME" } --versioning-configuration Status=Enabled &&
 					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
 					${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
 					${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
