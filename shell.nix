@@ -271,6 +271,8 @@ in pkgs.mkShell {
 
 			''
 		)
+		pkgs.jq
+		pkgs.s3fs
 		(
 			let
 				configure-gnucash = pkgs.writeShellScriptBin "configure-gnucash" ''
@@ -280,18 +282,22 @@ in pkgs.mkShell {
 					export AWS_DEFAULT_REGION=us-east-1 &&
 					BUCKET_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
-					GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					PASSWD_FILE=$( ${ pkgs.mktemp }/bin/mktemp ) &&
+					# GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					POLICY_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
 					COMMIT_HASH=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) &&
 					${ pkgs.coreutils }/bin/echo BUCKET_NAME=${ dollar "BUCKET_NAME" } &&
 					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
-					${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
+					# ${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
 					${ pkgs.coreutils }/bin/echo POLICY_NAME=${ dollar "POLICY_NAME" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
 					${ pkgs.awscli2 }/bin/aws s3api create-bucket --acl private --bucket ${ dollar "BUCKET_NAME" } &&
 					${ pkgs.awscli2 }/bin/aws s3api put-bucket-versioning --bucket ${ dollar "BUCKET_NAME" } --versioning-configuration Status=Enabled &&
 					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
-					${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
-					${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-access-key --user-name ${ dollar "USER_NAME" } | ${ pkgs.jq }/bin/jq --raw-output ""[.AccessKey.AccessKeyId,.AccessKey.SecretAccessKey] | join(\":\")" > ${ dollar "PASSWD_FILE" } &&
+					${ pkgs.coreutils }/bin/chmod 0400 ${ dollar "PASSWD_FILE" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
 					# ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" }
 					${ pkgs.coreutils }/bin/true
 					# CREATE A BUCKET
