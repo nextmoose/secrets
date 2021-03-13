@@ -338,7 +338,7 @@ in pkgs.mkShell {
 					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
 					${ pkgs.coreutils }/bin/true &&
 					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
-					${ pkgs.encfs }/bin/encfs ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
+					${ pkgs.encfs }/bin/encfs ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
