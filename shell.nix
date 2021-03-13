@@ -288,7 +288,6 @@ in pkgs.mkShell {
 					${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
 					${ pkgs.coreutils }/bin/echo POLICY_NAME=${ dollar "POLICY_NAME" } &&
 					${ pkgs.awscli2 }/bin/aws s3api create-bucket --acl private --bucket ${ dollar "BUCKET_NAME" } &&
-					${ pkgs.awscli2 }/bin/aws s3api put-bucket-tagging --bucket ${ dollar "BUCKET_NAME" } --tagging Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
 					${ pkgs.awscli2 }/bin/aws s3api put-bucket-versioning --bucket ${ dollar "BUCKET_NAME" } --versioning-configuration Status=Enabled &&
 					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
 					${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
