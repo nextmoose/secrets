@@ -209,5 +209,18 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "install-rpi-clone" ''
+				cd $( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				${ pkgs.git }/bin/git clone https://github.com/billw2/rpi-clone.git &&
+				cd rpi-clone &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp rpi-clone rpi-clone-setup /usr/local/sbin
+			''
+		)
+		(
+			pkgs.writeShellScriptBin "ubuntu-backup" ''
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/dd if=/dev/sda of=/dev/sdb bs=4M status=progress
+			''
+		)
 	] ;
 }
