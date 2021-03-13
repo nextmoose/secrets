@@ -232,7 +232,7 @@ in pkgs.mkShell {
 						${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
 						${ pkgs.coreutils }/bin/sha512sum ${ builtins.getEnv "PWD" }/backup.${ dollar "TSTAMP" }.img.gz | ${ pkgs.coreutils }/bin/cut --bytes -128 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz.sha512 &&
 						FLAG=0 &&
-						${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --printf "%W %n" \; | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 2 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
+						${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --format "%W ${ builtins.getEnv "PWD" }/backups/%n" {}\; | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 2 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
 						do
 							if [ ${ dollar "FILE" } != ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz ] &&
 								[ ${ dollar "FLAG" } == 0 ] &&
@@ -247,18 +247,22 @@ in pkgs.mkShell {
 								${ pkgs.coreutils }/bin/rm ${ dollar "FILE" } ${ dollar "FILE" }.sha512
 							fi
 						done
-					fi
+					fi &&
+					${ pkgs.coreutils }/bin/rm ${ builtins.getEnv "PWD" }/backups/lock
 				) 200> ${ builtins.getEnv "PWD" }/backups/lock
 			'' ; in pkgs.writeShellScriptBin "ubuntu-backup" "${ pkgs.coreutils }/bin/echo '* * * * *  ${ pkgs.coreutils }/bin/nice --adjustment 19 ${ script }/bin/ubuntu-backup ' | /usr/bin/sudo /usr/bin/crontab -"
 		)
 		(
-			pkgs.writeShellScriptBin "ubuntu-cron" ''
-
-			''
-		)
-		(
 			pkgs.writeShellScriptBin "ubuntu-restore" ''
-				${ pkgs.gzip }/bin/gunzip ${ dollar 1 } | /usr/bin/sudo ${ pkgs.coreutils }/bin/dd of=/dev/sda bs=4M
+				(
+					(
+						${ pkgs.flock }/bin/flock -n -E 42 200 || exit 41
+					) &&
+					${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --format "%W ${ builtins.getEnv "PWD" }/backups/%n" | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 1 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
+					do
+						${ pkgs.gzip }/bin/gunzip ${ dollar 1 } | /usr/bin/sudo ${ pkgs.coreutils }/bin/dd of=/dev/sda bs=4M
+					done
+				) 200> ${ builtins.getEnv "PWD" }/backups/lock
 			''
 		)
 	] ;
