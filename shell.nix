@@ -226,7 +226,7 @@ in pkgs.mkShell {
 					) &&
 					ONE=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\1#" ) &&
 					FIFTEEN=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\3#" ) &&
-					if [ ${ dollar "ONE" } -lt 1 ] && [ ${ dollar "FIFTEEN" } -lt 1 ]
+					if [ -b /dev/sda ] && [ ! -f ${ builtins.getEnv "PWD" }/backups/semaphore ] && [ ${ dollar "ONE" } -lt 1 ] && [ ${ dollar "FIFTEEN" } -lt 1 ]
 					then
 						TSTAMP=$( ${ pkgs.coreutils }/bin/date +%Y%m%d%H%M ) &&
 						${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
@@ -256,7 +256,7 @@ in pkgs.mkShell {
 			pkgs.writeShellScriptBin "ubuntu-restore" ''
 				(
 					(
-						${ pkgs.flock }/bin/flock -n -E 42 200 || exit 41
+						${ pkgs.flock }/bin/flock -n 200 || exit 41
 					) &&
 					${ pkgs.findutils }/bin/find ${ builtins.getEnv "PWD" }/backups -name *.img.gz -exec ${ pkgs.coreutils }/bin/stat --format "%W ${ builtins.getEnv "PWD" }/backups/%n" | ${ pkgs.coreutils }/bin/sort --key 1 --numeric | ${ pkgs.coreutils }/bin/tail --lines 1 | ${ pkgs.coreutils }/bin/cut --delimiter " " --fields 2 | while read FILE
 					do
