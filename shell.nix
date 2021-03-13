@@ -279,8 +279,16 @@ in pkgs.mkShell {
 					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
 					export AWS_DEFAULT_REGION=us-east-1 &&
 					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					POLICY_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					COMMIT_HASH=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) &&
 					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
-					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) | ${ pkgs.jq }/bin/jq --raw-output
+					${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" }
+					${ pkgs.coreutils }/bin/true
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
