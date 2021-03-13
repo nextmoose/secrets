@@ -219,7 +219,7 @@ in pkgs.mkShell {
 		)
 		(
 			pkgs.writeShellScriptBin "ubuntu-backup" ''
-				/usr/bin/sudo ${ pkgs.coreutils }/bin/dd if=/dev/sda of=/dev/sdb bs=4M status=progress
+				${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip > backup-$( ${ pkgs.coreutils }/bin/date +%Y%m%d).img.gz
 			''
 		)
 	] ;
