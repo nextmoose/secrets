@@ -321,9 +321,10 @@ in pkgs.mkShell {
 					# ${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
 					# ${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
 					POLICY_DOCUMENT=$( ${ pkgs.mktemp }/bin/mktemp ) &&
-					${ pkgs.gnused }/bin/sed -e "s#\${ dollar "BUCKET_NAME" }#${ dollar "BUCKET_NAME" }#" -e "w${ dollar "POLICY_DOCUMENT" }" ${ policy-document }/policy.json &&
+					${ pkgs.gnused }/bin/sed -e "s#\${ dollar "BUCKET_NAME" }#${ dollar "BUCKET_NAME" }#" -e "w${ dollar "POLICY_DOCUMENT" }" ${ policy-document } &&
 					POLICY_ARN=$( ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --policy-document file://${ dollar "POLICY_DOCUMENT" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } | ${ pkgs.jq }/bin/jq --raw-output ".Policy.Arn" ) &&
 					${ pkgs.awscli2 }/bin/aws iam attach-user-policy --user-name ${ dollar "USER_NAME" } --policy-arn ${ dollar "POLICY_ARN" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
 					${ pkgs.coreutils }/bin/true
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
