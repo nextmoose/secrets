@@ -244,7 +244,7 @@ in pkgs.mkShell {
 							elif [ ${ dollar "FILE" } == ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz ] &&
 								[ FLAG==1 ]
 							then
-								${ pkgs.coreutils }/bin/rm ${ dollar "FILE" } ${ dollar "FILE" }.sha512
+								${ pkgs.coreutils }/bin/rm ${ dollar "FILE" }
 							fi
 						done
 					fi &&
