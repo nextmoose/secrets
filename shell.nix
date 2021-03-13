@@ -107,7 +107,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
-					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash &&
+					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --set HOME ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
 			}
@@ -277,11 +277,6 @@ in pkgs.mkShell {
 				) 200> ${ builtins.getEnv "PWD" }/backups/lock
 			''
 		)
-		(
-			pkgs.writeShellScriptBin "gnucash" ''
-
-			''
-		)
 		pkgs.jq
 		pkgs.s3fs
 		(
@@ -338,7 +333,7 @@ in pkgs.mkShell {
 					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
 					${ pkgs.coreutils }/bin/true &&
 					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
-					${ pkgs.encfs }/bin/encfs ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
+					${ pkgs.pass }/bin/pass show encfs/gnucash | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
