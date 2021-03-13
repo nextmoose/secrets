@@ -219,20 +219,15 @@ in pkgs.mkShell {
 		)
 		(
 			let script = pkgs.writeShellScriptBin "ubuntu-backup" ''
-				${ pkgs.coreutils }/bin/echo cce24c28-a70c-4a27-90a8-1fba2c991a1f > ${ builtins.getEnv "PWD" }/backups/debug &&
 				${ pkgs.coreutils }/bin/mkdir --parents ${ builtins.getEnv "PWD" }/backups &&
-				${ pkgs.coreutils }/bin/echo 7e307013-d1b0-40e4-849a-351bd54782db >> ${ builtins.getEnv "PWD" }/backups/debug &&
 				(
 					(
 						${ pkgs.flock }/bin/flock -n 200 || exit 41
 					) &&
-					${ pkgs.coreutils }/bin/echo f643b64b-094a-4b2b-a18d-d4b88a48a7d8 >> ${ builtins.getEnv "PWD" }/backups/debug &&
 					ONE=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\1#" ) &&
 					FIFTEEN=$( ${ pkgs.coreutils }/bin/top -bn1 | ${ pkgs.coreutils }/bin/head --lines 1 | ${ pkgs.gnused }/bin/sed -e "s#^top - [0-9][0-9]:[0-9][0-9]:[0-9][0-9] up [0-9][0-9]:[0-9][0-9],[ ]*[0-9]* user,[ ]*load average: \([^,]*\), \([^,]*\), \(.*\)\$#\3#" ) &&
-					${ pkgs.coreutils }/bin/echo e737d302-c8e1-42d3-b660-cb5ff7a86841 >> ${ builtins.getEnv "PWD" }/backups/debug &&
 					if [ ${ dollar "ONE" } -lt 1 ] && [ ${ dollar "FIFTEEN" } -lt 1 ]
 					then
-						${ pkgs.coreutils }/bin/echo 2c796fbf-a2bb-48f3-bcb3-92e50fc91d2b >> ${ builtins.getEnv "PWD" }/backups/debug &&
 						TSTAMP=$( ${ pkgs.coreutils }/bin/date +%Y%m%d%H%M ) &&
 						${ pkgs.coreutils }/bin/dd if=/dev/sda bs=4M | ${ pkgs.gzip }/bin/gzip -9 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz &&
 						${ pkgs.coreutils }/bin/sha512sum ${ builtins.getEnv "PWD" }/backup.${ dollar "TSTAMP" }.img.gz | ${ pkgs.coreutils }/bin/cut --bytes -128 > ${ builtins.getEnv "PWD" }/backups/${ dollar "TSTAMP" }.img.gz.sha512 &&
@@ -253,7 +248,6 @@ in pkgs.mkShell {
 							fi
 						done
 					fi &&
-					${ pkgs.coreutils }/bin/echo 4c7e1153-7bd7-4791-b5bc-9eddde055ac4 >> ${ builtins.getEnv "PWD" }/backups/debug &&
 					${ pkgs.coreutils }/bin/rm ${ builtins.getEnv "PWD" }/backups/lock
 				) 200> ${ builtins.getEnv "PWD" }/backups/lock
 			'' ; in pkgs.writeShellScriptBin "ubuntu-backup" "${ pkgs.coreutils }/bin/echo '* * * * *  ${ pkgs.coreutils }/bin/nice --adjustment 19 ${ script }/bin/ubuntu-backup ' | /usr/bin/sudo /usr/bin/crontab -"
