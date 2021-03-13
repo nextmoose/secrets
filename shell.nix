@@ -289,8 +289,8 @@ in pkgs.mkShell {
 									"s3:DeleteObject"
 								],
 								"Resource": [
-									"arn:aws:s3:::${ dollar "BUCKET_NAME" }",
-									"arn:aws:s3:::${ dollar "BUCKET_NAME" }/*"
+									"arn:aws:s3:::${ dollar "BUCKET_NAME" }/*",
+									"arn:aws:s3:::${ dollar "BUCKET_NAME" }"
 								]
 							}
 						]
