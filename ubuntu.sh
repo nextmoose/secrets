@@ -2,6 +2,7 @@
 
 /usr/bin/sudo /usr/bin/apt-get update --assume-yes &&
 /usr/bin/sudo /usr/bin/apt-get install --assume-yes curl &&
+/usr/bin/sudo /usr/bin/apt-get install --assume-yes s3fs &&
 /usr/bin/curl -L https://nixos.org/nix/install | /usr/bin/sh &&
 /usr/bin/sudo /usr/bin/apt-get install --assume-yes direnv &&
 (
