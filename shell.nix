@@ -88,9 +88,11 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash /etc/passwd-s3fs &&
 				/usr/bin/sudo chown 0400 /etc/passwd-s3fs &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
-				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash  ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
@@ -107,7 +109,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
-					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --set HOME ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
+					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --set HOME ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash --add-flags ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash/my-gnucash.gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
 			}
