@@ -217,7 +217,8 @@ in pkgs.mkShell {
 			pkgs.writeShellScriptBin "ubuntu-10" ''
 				MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda2 ${ dollar "MOUNT" } &&
-				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp --recursive . ${ dollar "MOUNT" }/wizardry &&
+				${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } archive --format tar | /usr/bin/sudo ${ pkgs.tar }/bin/tar --directory ${ dollar "MOUNT" }/wizardry --extract --file - &&
+				${ pkgs.coreutils }/bin/cp --recursive ${ builtins.getEnv "PWD" }/.private ${ dollar "MOUNT" }/wizardry/.private &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/chown -R $( ${ pkgs.coreutils }/bin/whoami ):$( ${ pkgs.coreutils }/bin/whoami ) ${ dollar "MOUNT" }/wizardry &&
 				/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MOUNT" } &&
 				${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MOUNT" }
@@ -351,5 +352,6 @@ in pkgs.mkShell {
 		)
 		pkgs.awscli2
 		pkgs.libuuid
+		pkgs.paperwork
 	] ;
 }
