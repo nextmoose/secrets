@@ -96,6 +96,7 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash  ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
 				${ pkgs.coreutils }/bin/true
 			''
 		)
