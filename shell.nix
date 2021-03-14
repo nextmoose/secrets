@@ -109,7 +109,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
-					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --set HOME ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash --add-flags ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash/my-gnucash.gnucash &&
+					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --add-flags ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash/my-gnucash.gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
 			}
