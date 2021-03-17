@@ -44,8 +44,13 @@ w
 
 
 	'' ;
+	pass-completion = pass-dir : pkgs.writeShellScriptBin "completion" ( builtins.replaceStrings [ "_pass" " pass" ( dollar "PASSWORD_STORE_DIR:-$HOME/.password-store/" ) ] [ "_${ pass-dir }_pass" " ${ pass-dir }-pass" "${ builtins.getEnv "PWD" }/.structures/password-stores/${ pass-dir }" ] ( builtins.readFile "${ pkgs.pass }/share/bash-completion/completions/pass" ) ) ;
 in pkgs.mkShell {
+	shellHook = ''
+		${ pkgs.coreutils }/bin/echo ${ pass-completion "browser" }
+	'' ;
 	buildInputs = [
+		pkgs.pass
 		pkgs.vscode
 		(
 			pkgs.writeShellScriptBin "initial-configuration" ''
@@ -83,6 +88,7 @@ in pkgs.mkShell {
 				pass challenge personal:nextmoose/challenge-secrets.git master &&
 				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
 				pass feature personal:nextmoose/secrets.git master &&
+				pass mosaic personal:nextmoose/secrets.git e12704e4-4cf5-409f-9275-326baa62c069 &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/passwd_files &&
 				${ pkgs.coreutils }/bin/echo AKIAYZXVAKILKBVX6XFY:$( ${ pkgs.pass }/bin/pass show aws/iam/AKIAYZXVAKILKBVX6XFY ) > ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
 				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
@@ -110,6 +116,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/mosaic-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/mosaic &&
 					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --add-flags ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash/my-gnucash.gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
