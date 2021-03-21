@@ -47,9 +47,63 @@ w
 	pass-completion = pass-dir : pkgs.writeShellScriptBin "completion" ( builtins.replaceStrings [ "_pass" " pass" ( dollar "PASSWORD_STORE_DIR:-$HOME/.password-store/" ) ] [ "_${ pass-dir }_pass" " ${ pass-dir }-pass" "${ builtins.getEnv "PWD" }/.structures/password-stores/${ pass-dir }" ] ( builtins.readFile "${ pkgs.pass }/share/bash-completion/completions/pass" ) ) ;
 in pkgs.mkShell {
 	shellHook = ''
-		${ pkgs.coreutils }/bin/echo ${ pass-completion "browser" }
+		${ pkgs.coreutils }/bin/echo source ${ pass-completion "browser" }/bin/completion &&
+		${ pkgs.coreutils }/bin/echo source ${ pass-completion "challenge" }/bin/completion
 	'' ;
 	buildInputs = [
+		(
+			let
+				sleep = "10s" ;
+				unmount-partition = pkgs.writeShellScriptBin "unmount-partition" ''
+					${ pkgs.coreutils }/bin/echo STARTED UMOUNTING ${ dollar 1 } &&
+					(
+						/usr/bin/sudo ${ pkgs.umount }/bin/umount --quiet ${ dollar 1 } || ${ pkgs.coreutils }/bin/true
+					) &&
+					${ pkgs.coreutils }/bin/echo FINISHED UNMOUNTING ${ dollar 1 } &&
+					${ pkgs.coreutils }/bin/sleep ${ sleep }
+				'' ;
+				wipe-partition = pkgs.writeShellScriptBin "wipe-partition" ''
+					${ pkgs.coreutils }/bin/echo STARTED WIPING ${ dollar 1 } &&
+					(
+						/usr/bin/sudo ${ pkgs.umount }/bin/umount --quiet ${ dollar 1 } || ${ pkgs.coreutils }/bin/true
+					) &&
+					/usr/bin/sudo ${ pkgs.utillinux }/bin/wipefs --all ${ dollar 1} &&
+					${ pkgs.coreutils }/bin/echo -en "d\n\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda --wipe always &&
+					${ pkgs.coreutils }/bin/echo FINISHED WIPING ${ dollar 1 } &&
+					${ pkgs.coreutils }/bin/sleep ${ sleep }
+				'' ;
+				create-partition = pkgs.writeShellScriptBin "create-partition" ''
+					${ pkgs.coreutils }/bin/echo STARTING CREATING PARTITION ${ dollar 1 } ${ dollar 2 } ${ dollar 3 } ${ dollar 4 } &&
+					${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+${ dollar 1 }\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+					${ pkgs.coreutils }/bin/echo -en "t\n\n${ dollar 2 }\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+					/usr/bin/sudo ${ dollar 3 } /dev/sda${ dollar 4 } &&
+					${ pkgs.coreutils }/bin/echo FINISHED CREATING PARTITION ${ dollar 1 } ${ dollar 2 } ${ dollar 3 } ${ dollar 4 } &&
+					${ pkgs.coreutils }/bin/sleep ${ sleep }
+				'' ;
+			in pkgs.writeShellScriptBin "nix-500" ''
+				MEDIA=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+				cleanup(){
+					${ pkgs.findutils }/bin/find ${ dollar "MEDIA" } -mindepth 1 -type d -exec /usr/bin/sudo ${ pkgs.umount }/bin/umount {} \; &&
+					${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MEDIA" }
+				} &&
+				trap cleanup EXIT &&
+				${ pkgs.findutils }/bin/find /dev -name sda[0-9]* -exec ${ wipe-partition }/bin/wipe-partition {} \; &&
+				${ create-partition }/bin/create-partition 1G 0b ${ pkgs.dosfstools }/bin/mkfs.fat 1 &&
+				${ create-partition }/bin/create-partition 4G 82 ${ pkgs.utillinux }/bin/mkswap 2 &&
+				# ${ create-partition }/bin/create-partition 24G 83 &&
+				# ${ create-partition }/bin/create-partition 34G 83 &&
+				# ${ pkgs.coreutils }/bin/sleep 10s &&
+				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+1G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+				# ${ pkgs.coreutils }/bin/sleep 10s &&
+				# ${ pkgs.coreutils }/bin/echo -en "t\n0b\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+				# ${ pkgs.coreutils }/bin/sleep 10s &&
+				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+4G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+				# ${ pkgs.coreutils }/bin/sleep 10s &&
+				# ${ pkgs.coreutils }/bin/echo -en "t\n82\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+				# ${ pkgs.coreutils }/bin/sleep 10s &&
+				${ pkgs.coreutils }/bin/true
+			''
+		)
 		pkgs.pass
 		pkgs.vscode
 		(
