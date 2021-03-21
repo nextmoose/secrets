@@ -19,15 +19,15 @@
   };
   fileSystems = [
     { mountPoint = "/";
-      device = "/dev/mmcblk0p3";
+      device = "/dev/sda3";
       options = "relatime";
       }
     { mountPoint = "/boot";
-      device = "/dev/mmcblk0p1";
+      device = "/dev/sda1";
       neededForBoot = true;
       }
     ];
-  swapDevices = [ { device = "/dev/mmcblk0p2"; } ];
+  swapDevices = [ { device = "/dev/sda2"; } ];
   };
   nixpkgs.config = {
     platform = pkgs.platforms.sheevaplug;

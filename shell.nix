@@ -69,6 +69,7 @@ in pkgs.mkShell {
 					) &&
 					/usr/bin/sudo ${ pkgs.utillinux }/bin/wipefs --all ${ dollar 1} &&
 					${ pkgs.coreutils }/bin/echo -en "d\n\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda --wipe always &&
+					/usr/bin/sudo ${ pkgs.parted }/bin/partprobe ${ dollar 1 } &&
 					${ pkgs.coreutils }/bin/echo FINISHED WIPING ${ dollar 1 } &&
 					${ pkgs.coreutils }/bin/sleep ${ sleep }
 				'' ;
@@ -91,6 +92,15 @@ in pkgs.mkShell {
 				${ create-partition }/bin/create-partition 4G 82 ${ pkgs.utillinux }/bin/mkswap 2 &&
 				${ create-partition }/bin/create-partition 24G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 3 &&
 				${ create-partition }/bin/create-partition 34G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 4 &&
+				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/nixos &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda3 ${ dollar "MEDIA" }/nixos &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/boot &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda1 ${ dollar "MEDIA" }/nixos/boot &&
+				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/tmp &&
+				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda4 ${ dollar "MEDIA" }/tmp &&
+				/usr/bin/sudo ${ pkgs.utillinux }/bin/swapon /dev/sda2 &&
+				export NIXOS_CONFIG=${ dollar "MEDIA" }/nixos/configuration.nix &&
+				${ pkgs.nix }/bin/nix-env -i -A config.system.build.nixos-install -A config.system.build.nixos-option -A config.system.build.nixos-generate-config -j 4 --cores 4 -f "nixpkgs/nixos" &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
 				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+1G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
