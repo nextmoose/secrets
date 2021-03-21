@@ -94,7 +94,7 @@ in pkgs.mkShell {
 				${ create-partition }/bin/create-partition 34G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 4 &&
 				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/nixos &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda3 ${ dollar "MEDIA" }/nixos &&
-				/usr/bin/sudo ${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/boot &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/nixos/boot &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda1 ${ dollar "MEDIA" }/nixos/boot &&
 				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/tmp &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda4 ${ dollar "MEDIA" }/tmp &&
