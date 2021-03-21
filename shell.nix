@@ -101,7 +101,13 @@ in pkgs.mkShell {
 				/usr/bin/sudo ${ pkgs.utillinux }/bin/swapon /dev/sda2 &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ./install/configuration.nix ${ dollar "MEDIA" }/nixos/configuration.nix &&
 				export NIXOS_CONFIG=${ dollar "MEDIA" }/nixos/configuration.nix &&
-				${ pkgs.nix }/bin/nix-env -i -A config.system.build.nixos-install -A config.system.build.nixos-option -A config.system.build.nixos-generate-config -j 4 --cores 4 &&
+				${ pkgs.nix }/bin/nix-env \
+					-i \
+					-A config.system.build.nixos-install \
+					-A config.system.build.nixos-option \
+					-A config.system.build.nixos-generate-config \
+					-j 4 \
+					--cores 4 &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
 				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+1G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
