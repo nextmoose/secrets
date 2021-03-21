@@ -83,7 +83,9 @@ in pkgs.mkShell {
 			in pkgs.writeShellScriptBin "nix-500" ''
 				MEDIA=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 				cleanup(){
-					${ pkgs.findutils }/bin/find ${ dollar "MEDIA" } -mindepth 1 -maxdepth 1 -type d -exec /usr/bin/sudo ${ pkgs.umount }/bin/umount {} \; &&
+					/usr/bin/sudo ${ pkgs.utillinux }/bin/swapoff /dev/sda2 &&
+					/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MEDIA" }/nixos/boot &&
+					/usr/bin/sudo ${ pkgs.umount }/bin/umount ${ dollar "MEDIA" }/nixos &&
 					${ pkgs.coreutils }/bin/rm --recursive --force ${ dollar "MEDIA" }
 				} &&
 				trap cleanup EXIT &&
