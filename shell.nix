@@ -74,8 +74,7 @@ in pkgs.mkShell {
 				'' ;
 				create-partition = pkgs.writeShellScriptBin "create-partition" ''
 					${ pkgs.coreutils }/bin/echo STARTING CREATING PARTITION ${ dollar 1 } ${ dollar 2 } ${ dollar 3 } ${ dollar 4 } &&
-					${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+${ dollar 1 }\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
-					${ pkgs.coreutils }/bin/echo -en "t\n\n${ dollar 2 }\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
+					${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+${ dollar 1 }\nt\n\n${ dollar 2 }\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
 					/usr/bin/sudo ${ dollar 3 } /dev/sda${ dollar 4 } &&
 					${ pkgs.coreutils }/bin/echo FINISHED CREATING PARTITION ${ dollar 1 } ${ dollar 2 } ${ dollar 3 } ${ dollar 4 } &&
 					${ pkgs.coreutils }/bin/sleep ${ sleep }
