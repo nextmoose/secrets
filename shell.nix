@@ -91,17 +91,17 @@ in pkgs.mkShell {
 				${ create-partition }/bin/create-partition 1G 0b ${ pkgs.dosfstools }/bin/mkfs.fat 1 &&
 				${ create-partition }/bin/create-partition 4G 82 ${ pkgs.utillinux }/bin/mkswap 2 &&
 				${ create-partition }/bin/create-partition 24G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 3 &&
-				${ create-partition }/bin/create-partition 34G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 4 &&
+				# ${ create-partition }/bin/create-partition 34G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 4 &&
 				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/nixos &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda3 ${ dollar "MEDIA" }/nixos &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/nixos/boot &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda1 ${ dollar "MEDIA" }/nixos/boot &&
-				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/tmp &&
-				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda4 ${ dollar "MEDIA" }/tmp &&
+				# ${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/tmp &&
+				# /usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda4 ${ dollar "MEDIA" }/tmp &&
 				/usr/bin/sudo ${ pkgs.utillinux }/bin/swapon /dev/sda2 &&
 				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ./install/configuration.nix ${ dollar "MEDIA" }/nixos/configuration.nix &&
 				export NIXOS_CONFIG=${ dollar "MEDIA" }/nixos/configuration.nix &&
-				${ pkgs.nix }/bin/nix-env -i -A config.system.build.nixos-install -A config.system.build.nixos-option -A config.system.build.nixos-generate-config -j 4 --cores 4 -f "nixpkgs/nixos" &&
+				${ pkgs.nix }/bin/nix-env -i -A config.system.build.nixos-install -A config.system.build.nixos-option -A config.system.build.nixos-generate-config -j 4 --cores 4 &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
 				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+1G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
