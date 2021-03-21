@@ -89,7 +89,7 @@ in pkgs.mkShell {
 				${ pkgs.findutils }/bin/find /dev -name sda[0-9]* -exec ${ wipe-partition }/bin/wipe-partition {} \; &&
 				${ create-partition }/bin/create-partition 1G 0b ${ pkgs.dosfstools }/bin/mkfs.fat 1 &&
 				${ create-partition }/bin/create-partition 4G 82 ${ pkgs.utillinux }/bin/mkswap 2 &&
-				# ${ create-partition }/bin/create-partition 24G 83 &&
+				${ create-partition }/bin/create-partition 24G 83 ${ pkgs.e2fsprogs }/bin/mkfs.ext4 3 &&
 				# ${ create-partition }/bin/create-partition 34G 83 &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
 				# ${ pkgs.coreutils }/bin/echo -en "n\n\n\n\n+1G\nw\n" | /usr/bin/sudo ${ pkgs.unixtools.fdisk }/bin/fdisk /dev/sda &&
