@@ -99,6 +99,7 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/mkdir ${ dollar "MEDIA" }/tmp &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount /dev/sda4 ${ dollar "MEDIA" }/tmp &&
 				/usr/bin/sudo ${ pkgs.utillinux }/bin/swapon /dev/sda2 &&
+				/usr/bin/sudo ${ pkgs.coreutils }/bin/cp ./install/configuration.nix ${ dollar "MEDIA" }/nixos/configuration.nix &&
 				export NIXOS_CONFIG=${ dollar "MEDIA" }/nixos/configuration.nix &&
 				${ pkgs.nix }/bin/nix-env -i -A config.system.build.nixos-install -A config.system.build.nixos-option -A config.system.build.nixos-generate-config -j 4 --cores 4 -f "nixpkgs/nixos" &&
 				# ${ pkgs.coreutils }/bin/sleep 10s &&
