@@ -122,6 +122,18 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/true
 			''
 		)
+		(
+			pkgs.writeShellScriptBin "nix-600" ''
+				${ pkgs.nix }/bin/nix-env \
+				--install \
+				--attr config.system.build.nixos-install \
+				--attr config.system.build.nixos-option \
+				--attr config.system.build.nixos-generate-config \
+				--max-jobs 4 \
+				--cores 4 \
+				--file ${ builtins.fetchGit { url = "https://github.com/NixOS/nixpkgs.git" ; } }
+			''
+		)
 		pkgs.pass
 		pkgs.vscode
 		(
@@ -422,12 +434,50 @@ in pkgs.mkShell {
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
 				'' ;
+				configure-paperwork = pkgs.writeShellScriptBin "configure-paperwork" ''
+					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
+					${ pkgs.pass }/bin/pass show &&
+					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
+					export AWS_DEFAULT_REGION=us-east-1 &&
+					BUCKET_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					PASSWD_FILE=$( ${ pkgs.mktemp }/bin/mktemp ) &&
+					# GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					POLICY_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					COMMIT_HASH=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) &&
+					${ pkgs.coreutils }/bin/echo BUCKET_NAME=${ dollar "BUCKET_NAME" } &&
+					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
+					# ${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
+					${ pkgs.coreutils }/bin/echo POLICY_NAME=${ dollar "POLICY_NAME" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
+					${ pkgs.awscli2 }/bin/aws s3api create-bucket --acl private --bucket ${ dollar "BUCKET_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-versioning --bucket ${ dollar "BUCKET_NAME" } --versioning-configuration Status=Enabled &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-encryption --bucket ${ dollar "BUCKET_NAME" } --server-side-encryption-configuration '{"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}' &&
+					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-access-key --user-name ${ dollar "USER_NAME" } | ${ pkgs.jq }/bin/jq --raw-output "[.AccessKey.AccessKeyId,.AccessKey.SecretAccessKey] | join(\":\")" > ${ dollar "PASSWD_FILE" } &&
+					${ pkgs.coreutils }/bin/chmod 0400 ${ dollar "PASSWD_FILE" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
+					POLICY_DOCUMENT=$( ${ pkgs.mktemp }/bin/mktemp ) &&
+					${ pkgs.gnused }/bin/sed -e "s#\${ dollar "BUCKET_NAME" }#${ dollar "BUCKET_NAME" }#" -e "w${ dollar "POLICY_DOCUMENT" }" ${ policy-document } &&
+					POLICY_ARN=$( ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --policy-document file://${ dollar "POLICY_DOCUMENT" } | ${ pkgs.jq }/bin/jq --raw-output ".Policy.Arn" ) &&
+					${ pkgs.awscli2 }/bin/aws iam attach-user-policy --user-name ${ dollar "USER_NAME" } --policy-arn ${ dollar "POLICY_ARN" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
+					${ pkgs.coreutils }/bin/true &&
+					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+					${ pkgs.pass }/bin/pass generate encfs/paperwork 1000 --clip &&
+					${ pkgs.pass }/bin/pass show encfs/gnucash | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
+					# CREATE A BUCKET
+					# CREATE A POLICY BINDING USER AND BUCKET
+					# REPORT GENERATED VALUES
+				'' ;
 			in pkgs.stdenv.mkDerivation {
 				name = "aws-setup" ;
 				src = ./empty ;
 				buildInputs = [ pkgs.makeWrapper ] ;
 				installPhase = ''
 					makeWrapper ${ configure-gnucash }/bin/configure-gnucash $out/bin/configure-gnucash --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
+					makeWrapper ${ configure-paperwork }/bin/configure-paperwork $out/bin/configure-paperwork --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
 				'' ;
 			}
 		)
