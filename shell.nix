@@ -180,12 +180,17 @@ in pkgs.mkShell {
 				/usr/bin/sudo chown 0400 /etc/passwd-s3fs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/paperwork &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork &&
 				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "345e1446-087b-421a-9e7d-ae02cf0bd0dd ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/paperwork 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash  ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork  ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork &&
 				/usr/bin/sudo ${ pkgs.mount }/bin/mount ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
 				${ pkgs.coreutils }/bin/true
 			''
