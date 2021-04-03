@@ -181,13 +181,17 @@ in pkgs.mkShell {
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/paperwork &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs-cache/archive &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork &&
+				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/s3fs/archive &&
 				${ pkgs.coreutils }/bin/echo "2ae24887-9477-45c0-b5ba-b888885e41f5 ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/gnucash 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/echo "345e1446-087b-421a-9e7d-ae02cf0bd0dd ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/paperwork 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
-				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash  ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
-				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork  ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "dc1e7061-2ef2-423c-a0e1-8ed9e0bbe3a4 ${ builtins.getEnv "PWD" }/.structures/s3fs/archive fuse.s3fs _netdev,allow_other,use_cache=${ builtins.getEnv "PWD" }/.structures/s3fs-cache/archive 0 0" | /usr/bin/sudo tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
+				${ pkgs.coreutils }/bin/echo "encfs#${ builtins.getEnv "PWD" }/.structures/s3fs/archive ${ builtins.getEnv "PWD" }/.structures/encfs/archive  fuse  noauto,user  0  0" | /usr/bin/sudo ${ pkgs.coreutils }/bin/tee --append /etc/fstab &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork &&
@@ -471,7 +475,44 @@ in pkgs.mkShell {
 					${ pkgs.coreutils }/bin/true &&
 					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 					${ pkgs.pass }/bin/pass generate encfs/paperwork 1000 --clip &&
-					${ pkgs.pass }/bin/pass show encfs/gnucash | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
+					${ pkgs.pass }/bin/pass show encfs/paperwork | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork ${ builtins.getEnv "PWD" }/.structures/encfs/paperwork
+					# CREATE A BUCKET
+					# CREATE A POLICY BINDING USER AND BUCKET
+					# REPORT GENERATED VALUES
+				'' ;
+				configure-xxx = pkgs.writeShellScriptBin "configure-xxx" ''
+					export PASSWORD_STORE_DIR=${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
+					${ pkgs.pass }/bin/pass show &&
+					export AWS_SECRET_ACCESS_KEY=$( ${ pkgs.pass }/bin/pass show aws/iam/${ dollar "AWS_ACCESS_KEY_ID" } ) &&
+					export AWS_DEFAULT_REGION=us-east-1 &&
+					BUCKET_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					USER_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					PASSWD_FILE=$( ${ pkgs.mktemp }/bin/mktemp ) &&
+					# GROUP_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					POLICY_NAME=$( ${ pkgs.libuuid }/bin/uuidgen ) &&
+					COMMIT_HASH=$( ${ pkgs.git }/bin/git -C ${ builtins.getEnv "PWD" } rev-parse HEAD ) &&
+					${ pkgs.coreutils }/bin/echo BUCKET_NAME=${ dollar "BUCKET_NAME" } &&
+					${ pkgs.coreutils }/bin/echo USER_NAME=${ dollar "USER_NAME" } &&
+					# ${ pkgs.coreutils }/bin/echo GROUP_NAME=${ dollar "GROUP_NAME" } &&
+					${ pkgs.coreutils }/bin/echo POLICY_NAME=${ dollar "POLICY_NAME" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
+					${ pkgs.awscli2 }/bin/aws s3api create-bucket --acl private --bucket ${ dollar "BUCKET_NAME" } &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-versioning --bucket ${ dollar "BUCKET_NAME" } --versioning-configuration Status=Enabled &&
+					${ pkgs.awscli2 }/bin/aws s3api put-bucket-encryption --bucket ${ dollar "BUCKET_NAME" } --server-side-encryption-configuration '{"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}' &&
+					${ pkgs.awscli2 }/bin/aws iam create-user --user-name ${ dollar "USER_NAME" } --tags Key=CommitHash,Value=${ dollar "COMMIT_HASH" } &&
+					${ pkgs.awscli2 }/bin/aws iam create-access-key --user-name ${ dollar "USER_NAME" } | ${ pkgs.jq }/bin/jq --raw-output "[.AccessKey.AccessKeyId,.AccessKey.SecretAccessKey] | join(\":\")" > ${ dollar "PASSWD_FILE" } &&
+					${ pkgs.coreutils }/bin/chmod 0400 ${ dollar "PASSWD_FILE" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam create-group --group-name ${ dollar "GROUP_NAME" } &&
+					# ${ pkgs.awscli2 }/bin/aws iam add-user-to-group --group-name ${ dollar "GROUP_NAME" } --user-name ${ dollar "USER_NAME" } &&
+					POLICY_DOCUMENT=$( ${ pkgs.mktemp }/bin/mktemp ) &&
+					${ pkgs.gnused }/bin/sed -e "s#\${ dollar "BUCKET_NAME" }#${ dollar "BUCKET_NAME" }#" -e "w${ dollar "POLICY_DOCUMENT" }" ${ policy-document } &&
+					POLICY_ARN=$( ${ pkgs.awscli2 }/bin/aws iam create-policy --policy-name ${ dollar "POLICY_NAME" } --policy-document file://${ dollar "POLICY_DOCUMENT" } | ${ pkgs.jq }/bin/jq --raw-output ".Policy.Arn" ) &&
+					${ pkgs.awscli2 }/bin/aws iam attach-user-policy --user-name ${ dollar "USER_NAME" } --policy-arn ${ dollar "POLICY_ARN" } &&
+					${ pkgs.coreutils }/bin/echo PASSWD_FILE=${ dollar "PASSWD_FILE" } &&
+					${ pkgs.coreutils }/bin/true &&
+					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
+					${ pkgs.pass }/bin/pass generate encfs/${ dollar "TARGET_NAME" } 1000 --clip &&
+					${ pkgs.pass }/bin/pass show encfs/${ dollar "TARGET_NAME" } | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/${ dollar "TARGET_NAME" } ${ builtins.getEnv "PWD" }/.structures/encfs/${ dollar "TARGET_NAME" }
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
@@ -481,8 +522,9 @@ in pkgs.mkShell {
 				src = ./empty ;
 				buildInputs = [ pkgs.makeWrapper ] ;
 				installPhase = ''
-					makeWrapper ${ configure-gnucash }/bin/configure-gnucash $out/bin/configure-gnucash --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
-					makeWrapper ${ configure-paperwork }/bin/configure-paperwork $out/bin/configure-paperwork --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
+					makeWrapper ${ configure-gnucash }/bin/configure-gnucash $out/bin/configure-gnucash --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json &&
+					makeWrapper ${ configure-paperwork }/bin/configure-paperwork $out/bin/configure-paperwork --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json &&
+					makeWrapper ${ configure-xxx }/bin/configure-xxx $out/bin/configure-archive --set AWS_ACCESS_KEY_ID AKIAYZXVAKILN3BH7BWG --set TARGET_NAME archive --set AWS_DEFAULT_REGION us-east-1 --set AWS_DEFAULT_OUTPUT json
 				'' ;
 			}
 		)
