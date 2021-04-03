@@ -471,7 +471,7 @@ in pkgs.mkShell {
 					${ pkgs.coreutils }/bin/true &&
 					MOUNT=$( ${ pkgs.mktemp }/bin/mktemp -d ) &&
 					${ pkgs.pass }/bin/pass generate encfs/paperwork 1000 --clip &&
-					${ pkgs.pass }/bin/pass show encfs/gnucash | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/gnucash ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
+					${ pkgs.pass }/bin/pass show encfs/gnucash | ${ pkgs.encfs }/bin/encfs --paranoia --stdinpass ${ builtins.getEnv "PWD" }/.structures/s3fs/paperwork ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash
 					# CREATE A BUCKET
 					# CREATE A POLICY BINDING USER AND BUCKET
 					# REPORT GENERATED VALUES
