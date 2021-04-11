@@ -137,6 +137,13 @@ in pkgs.mkShell {
 		pkgs.pass
 		pkgs.vscode
 		(
+			pkgs.writeShellScriptBin "archive-stuff" ''
+				${ pkgs.coreutils }/bin/echo This is a kludge.  Step 1.  Make a directory for receiving the files.  Step 2 execute rsync on the other computer. &&
+				${ pkgs.coreutils }/bin/mkdir --parents ${ builtins.getEnv "PWD" }/.structures/encfs/archive/${ dollar 2 }/$( ${ pkgs.coreutils }/bin/basename ${ dollar 1 } ) &&
+				${ pkgs.coreutils }/bin/echo rsync --archive --progress --delete --executability --xattrs --verbose ${ dollar 1 }/ emory@10.0.0.13:${ builtins.getEnv "PWD" }/.structures/encfs/archive/${ dollar 2 }/$( ${ pkgs.coreutils }/bin/basename ${ dollar 1 } )/
+			''
+		)
+		(
 			pkgs.writeShellScriptBin "initial-configuration" ''
 				${ pkgs.gnupg }/bin/gpg --batch --import ./.private/gpg-private-keys.asc &&
 				${ pkgs.gnupg }/bin/gpg --import-ownertrust ./.private/gpg-ownertrust.asc &&
@@ -169,6 +176,11 @@ in pkgs.mkShell {
 				${ pkgs.pass }/bin/pass show known-hosts > ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/dot-ssh/config ${ builtins.getEnv "PWD" }/.structures/dot-ssh/upstream.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/personal.id-rsa ${ builtins.getEnv "PWD" }/.structures/dot-ssh/report.id-rsa  ${ builtins.getEnv "PWD" }/.structures/dot-ssh/known-hosts &&
 				pass browser personal:nextmoose/secrets.git 5d3b3a2b-8e3d-454a-ae5b-117123eb2c85 &&
+				pass identification personal:nextmoose/secrets.git 29b18fc6-6b1b-4b59-b08d-6bef32aef42a &&
+				pass victor personal:nextmoose/secrets.git e5a9c46e-d971-426e-96d0-e85ba78b320e &&
+				pass alexander personal:nextmoose/secrets.git b072c88c-fa4e-454c-88b2-ef7861324752 &&
+				pass xiaoyan personal:nextmoose/secrets.git a72cd164-e3f6-41d2-ab1c-dcfee08d5bb5 &&
+				pass cuirong personal:nextmoose/secrets.git ce782e81-1395-4202-845a-caa7738ff1f2 &&
 				pass challenge personal:nextmoose/challenge-secrets.git master &&
 				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
 				pass feature personal:nextmoose/secrets.git master &&
@@ -206,6 +218,11 @@ in pkgs.mkShell {
 				buildInputs = [ pkgs.makeWrapper ] ;
 				installPhase = ''
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/browser-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/browser &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/identification-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/identification &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/victor-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/victor &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/alexander-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/alexander &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/xiaoyan-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/xiaoyan &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/cuirong-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/cuirong &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/challenge-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/challenge &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
