@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> { } } : let
+{ pkgs ? import ( fetchTarball "https://github.com/NixOS/nixpkgs/archive/21b696caf392ad6fa513caf3327d0aa0430ffb72.tar.gz" ) { } } : let
 	dollar = expression : builtins.concatStringsSep "" [ "$" "{" ( builtins.toString expression ) "}" ] ;
 	post-commit = pkgs.writeShellScriptBin "post-commit" ''
 		while ! ${ pkgs.git }/bin/git push personal HEAD
@@ -185,6 +185,7 @@ in pkgs.mkShell {
 				pass system personal:nextmoose/secrets.git e411046b-b79e-4266-a8fd-d56a3dbcb77d  &&
 				pass feature personal:nextmoose/secrets.git master &&
 				pass mosaic personal:nextmoose/secrets.git e12704e4-4cf5-409f-9275-326baa62c069 &&
+				pass symmetric personal:nextmoose/secrets.git 51506850-62f6-4d40-9bd5-63298da59eb5 &&
 				${ pkgs.coreutils }/bin/mkdir ${ builtins.getEnv "PWD" }/.structures/passwd_files &&
 				${ pkgs.coreutils }/bin/echo AKIAYZXVAKILKBVX6XFY:$( ${ pkgs.pass }/bin/pass show aws/iam/AKIAYZXVAKILKBVX6XFY ) > ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
 				${ pkgs.coreutils }/bin/chmod 0400 ${ builtins.getEnv "PWD" }/.structures/passwd_files/gnucash &&
@@ -227,6 +228,7 @@ in pkgs.mkShell {
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/system-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/system &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/feature-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/feature &&
 					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/mosaic-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/mosaic &&
+					makeWrapper ${ pkgs.pass }/bin/pass $out/bin/symmetric-pass --set PASSWORD_STORE_DIR ${ builtins.getEnv "PWD" }/.structures/password-stores/symmetric &&
 					makeWrapper ${ pkgs.gnucash }/bin/gnucash $out/bin/gnucash --add-flags ${ builtins.getEnv "PWD" }/.structures/encfs/gnucash/my-gnucash.gnucash &&
 					${ pkgs.coreutils }/bin/true
 				'' ;
@@ -548,5 +550,15 @@ in pkgs.mkShell {
 		pkgs.awscli2
 		pkgs.libuuid
 		pkgs.paperwork
+		(
+			pkgs.writeShellScriptBin "sinatra" ''
+				RESPONSE="HTTP/1.1 200 OK\r\nConnection: keep-alive\r\n\r\n${ "2:-\"OK\""}\r\n"
+				while { ${ pkgs.coreutils }/bin/echo echo -en "${ dollar "RESPONSE" }"; } | ${ pkgs.netcat }/bin/nc -l "${ dollar "1:-8080" }"
+				do
+					${ pkgs.coreutils }/bin/echo "================================================"
+				done
+			''
+		)
+		pkgs.nettools
 	] ;
 }
